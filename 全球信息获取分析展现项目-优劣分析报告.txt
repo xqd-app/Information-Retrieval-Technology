@@ -1,0 +1,303 @@
+# 全球信息「获取 — 分析 — 展现」六项目优劣分析报告
+
+> 分析对象：`E:\Information Retrieval Technology` 下 6 个开源项目
+> 方法：只读代码审计（逐项目读 README / 入口文件 / 抓取器 / 分析服务 / 前端组件 / CI 配置 / 归档数据），交叉核对 README 声明与真实实现，证据统一标注 `文件:行`
+> 报告日期：2026-11-24
+
+---
+
+## 一、执行摘要
+
+1. **六个项目其实是三种范式**：①静态快照站（AI-Search、ai-news-aggregator）——把抓取结果提交进仓库、`next export`/Vite 构建成纯静态站点；②单体实时服务（ZipNews）——一个 1980 行 Python 文件同步抓 60 路源、现算现发；③语义分析/推送端点（Insight-News、Daily-News-Briefing-Telegram-Bot、world-model-patch-wire）——把 LLM 插进流水线，分别面向「网页展示」「Telegram 推送」「AI agent 读取」。
+2. **真正把「分析」做出来的只有 Insight-News**。AI-Search 是「正则五分类 + 有界一句话点评」，ai-news 只有关键词过滤 + 翻译，ZipNews 是地名词典 + 关键词打分，world-model 的分析分支 35 天从未执行。6 个项目里 4 个的分析层实质是规则。
+3. **工程完整度最高是 AI-Search（3.8/5）**：48 源、三阶段去重（URL→标题→Jaccard 近似）、`allSettled` 失败隔离、死源告警、静态 JSON API + SKILL.md、84 个单测。
+4. **数据面最宽是 ZipNews（60 路）与 AI-Search（48 路）**，但 ZipNews 的宽度换来了最薄的分析层与最高的运行时耦合。
+5. **概念最漂亮、落地最差是 world-model-patch-wire**：把「今天的世界」做成 `llms.txt` + system prompt patch 的设计极有价值，但 35 天归档 100% 是无 API key 的 fallback 占位。
+6. **六个项目重复踩同一批坑**（第六节）：写接口无鉴权、测试形同虚设、失败静默、README 与实现漂移、时区口径分裂、无成本计量。
+
+**等权五维总分（数据广度 / 分析深度 / 展现交互 / 工程质量 / 可维护扩展，各 5 分）**
+
+| 排名 | 项目 | 数据广度 | 分析深度 | 展现交互 | 工程质量 | 可维护扩展 | 均值 |
+|:--:|:--|:--:|:--:|:--:|:--:|:--:|:--:|
+| 1 | AI-Search | 4 | 3 | 4 | 4 | 4 | **3.8** |
+| 2 | ai-news-aggregator | 4 | 2 | 4 | 3 | 3 | **3.2** |
+| 3 | ZipNews / World Signal | 4 | 2 | 4 | 3 | 2 | **3.0** |
+| 4 | Insight-News | 2 | 3 | 4 | 2 | 2 | **2.6** |
+| 5 | Daily-News-Briefing-Telegram-Bot | 2 | 3 | 2 | 2 | 2 | **2.2** |
+| 6 | world-model-patch-wire | 2 | 1 | 2 | 2 | 3 | **2.0** |
+
+> 注意：均值会掩盖特长。**若只看「分析能力」单维，排名是 Insight-News ≈ AI-Search > Daily Bot > 其余**；若只看「获取广度」，是 ZipNews > AI-Search ≈ ai-news > Insight-News > Daily Bot ≈ world-model。
+
+---
+
+## 二、项目全景对照
+
+| 项目 | 形态 | 技术栈 | 规模（代码行） | 真实数据源 | 分析层实质 | 持久化 | 部署 | CI / 测试 |
+|:--|:--|:--|:--|:--|:--|:--|:--|:--|
+| **AI-Search** | AI 资讯站 + 开放 API（模板化） | Next 14 App Router / React 18 / TS / Tailwind，静态导出 | 127 文件 / 13,531 行 | 44 RSS + 4 类 API 适配器 = **48** | 正则五分类 + DeepSeek 一句话点评/周报 | 仓库内 JSON 快照（items 578KB、archive 8.5MB） | GitHub Actions + Pages | Actions；9 文件 84 例（仅纯函数） |
+| **ai-news-aggregator** | AI 资讯聚合站 | Node + TS 抓取器 / React 18 + Vite 前端 | 101 文件 / 5,889 行 | 13 个内置抓取器 + 70 OPML RSS + 52 公众号 = **15 条管线** | 关键词表过滤（AI 词 23 / 技术词 20 / 黑名单）+ 标题翻译 | 仓库内 JSON（archive 90,635 条 / 37.8MB） | Actions + Pages（每 2h） | Actions；`pnpm test` 实际匹配 **0** 个文件 |
+| **ZipNews / World Signal** | 实时新闻情报仪表盘（地图 + 市场 + 信号） | Python 标准库 HTTP 服务 + 原生 JS + Leaflet（**零第三方依赖**） | 13 文件 / 5,312 行（app.py 1,980、CSS 1,901） | 45 RSS + 15 Google News 检索式 = **60** | 地名词典正则 + 26 关键词打分 + 首句摘要 | 无（进程内 dict 缓存） | Docker + Render free | 无 CI；**0 测试** |
+| **Insight-News** | 新闻偏见分析 / 事实核查平台 | MERN（Express 5 + Mongoose 9 + React 19）+ Python 情感管道 | 130 文件 / 9,307 行 | 14 RSS（实际轮转仅 3 组） | LLM 偏见打分 + 词法信号 + 来源基线；抽取式摘要；事件聚类 | MongoDB | Vercel + EC2 + Actions cron（6h） | Actions；**0 测试** |
+| **Daily-News-Briefing-Telegram-Bot** | 每日简报推送机器人 | Flask + `google-genai` + Telegram Bot API | 5 文件 / 279 行（单文件） | **3** 个 RSS | Gemini 一次性合成（去重/排序/摘要全交模型） | 无状态 | Render free + cron-job.org | 无 CI；**0 测试** |
+| **world-model-patch-wire** | 「AI 大脑每日补丁」数据端点 | Python + requests/feedparser + Actions cron | 43 文件 / 253 行自有代码（+35 天归档 97KB） | 3 流：BBC World（1）、CoinGecko（1）、HN（6 请求） | **从未执行**（LLM 分支 35/35 天 fallback） | git 仓库即时序库 | GitHub Actions（23:50 UTC） | Actions；**0 测试** |
+
+---
+
+## 三、逐项目分析
+
+### 3.1 AI-Search —— 综合最强、模板化最彻底
+
+**定位**：拿 GitHub Actions 当免费服务器，把 48 个公开源抓成 JSON 快照，DeepSeek 补一句话点评，`next build` 静态导出到 Pages。「可一键换源的资讯站模板」而非有分析内核的 AI 产品。
+
+**优点**
+1. **换源即换站**：所有源集中在带 tier 的 FEEDS 数组，README 的「5 分钟变金融站」真实可执行（`AI-Search-main/scripts/sources/rss.ts:30-84`）。
+2. **失败隔离彻底**：`Promise.allSettled` 一源一任务，单源异常只进 errors，不阻塞合并与写盘（`scripts/crawl.ts:87-99`）。
+3. **死源可观测**：按源打 Actions warning，超阈值 `exit 1` 倒逼维护（`scripts/crawl.ts:174-185`）。
+4. **三阶段去重**：URL 归一 → 标题归一精确合并 → Jaccard 0.65 近似合并，且有 `latinAgree` 防误合（`scripts/lib/persist.ts:5-88`）——六个项目里唯一的语义级去重。
+5. **热度跨源归一**：tier 基线 + 组内 log 百分位 ±15 + 7 天半衰期，避免 star 数碾压官方博客（`scripts/lib/heat.ts:25-92`）。
+6. **上游 schema 守卫**：只放行 http(s)、字段截断、非法条目计数丢弃（`lib/validate.ts:22-97`）；LLM 输出用代码兜底剥 ```json 与引用标记，不靠 prompt 自觉（`lib/llmClean.ts:38-52`）。
+7. **Agent 可消费**：预生成静态 JSON API + `public/SKILL.md`，另有 Cloudflare Worker 代理（Origin 白名单、参数钉死、KV 限流）（`scripts/generateApi.ts:48-119`、`worker/index.js:43-170`）。
+8. **展现层最完整**：8 个视图（首页/日报/周报/趋势/话题/时间线/事件/GitHub 趋势），手写 SVG 图表 + ⌘K 模糊搜索 + URL 可分享筛选态。
+
+**缺点与风险**
+1. **分析深度被预算封顶**：每日仅 30 条有点评，其余条目无任何解释；分类是纯正则五类，中文长标题容易落到 industry 兜底（`lib/classify.ts:11-59`）。无事实核验、无语义聚类。
+2. **抓取靠正则啃 HTML**：依赖 `<article class="Box-row`、"N stars today" 等字样，改版即全挂，代码里已写好 "markup changed?" 自检（`scripts/sources/githubTrending.ts:30-59`、`scripts/crawlGithub.ts:304-307`）；Anthropic/Meta 已退化为 Google News 站内搜索兜底（`scripts/sources/rss.ts:35-36`）。
+3. **测试只覆盖纯函数**：9 文件 84 例，抓取器、去重写盘、crawl 编排全无覆盖；根目录无 ESLint 配置，CI 只跑 `npm test`（`.github/workflows/deploy.yml:38-39`）。
+4. **时区口径分裂**：日报用 UTC 取片（`lib/dailyData.ts:142`），digest/周报用北京时（`scripts/lib/time.ts:10`），北京时间 00:00–08:00 的条目会被归到前一天。
+5. **首屏把全量数据塞进 client props**：首页 578KB、`/github` 604KB，无分页切片（`app/page.tsx:37`、`app/github/page.tsx:18`）。
+6. **仓库线性膨胀**：archive 已 8.5MB，每月分片每天整文件重写并 commit（`scripts/lib/archive.ts:53`、`deploy.yml:52-59`）。
+7. **降级链是假的**：aihot 上游已 403 却仍是 auto 链第二级 fallback，最终退 mock（`lib/aihot.ts:1-4`、`lib/dailyData.ts:246-251`）；`/timeline` 全站无入口链接。
+8. **再分发与 ToS 裸露**：44 源摘要长期存档并经 `/api/v1` 全量再分发，公众号内容走第三方镜像（`scripts/generateApi.ts:54`、`rss.ts:77-79`）。
+
+**可借鉴**：①「Actions 抓取 → 提交快照 → artifact 传给构建作业」的权限分层零服务器管道；②跨源可比热度公式；③「落盘即缓存」的 LLM 管线（只跑新条目、单次上限、同日跳过）。
+
+---
+
+### 3.2 ai-news-aggregator —— 源最杂、翻译有巧思、工程质量中上
+
+**定位**：13 个聚合站 + 70 条 OPML RSS + 52 个公众号合成 24h/7d 快照，双语标题，React 单页消费。抓取器是「一平台一实现」的混合体（cheerio HTML / JSON API / Atom / RSS）。
+
+**优点**
+1. **统一 Fetcher 抽象 + 单源失败隔离**（`ai-news-aggregator-main/src/fetchers/base.ts:39-78`）。
+2. **archive 是唯一事实源，24h/7d 只是视图投影**，避免多份数据漂移（`src/index.ts:224-256`）。
+3. **抓取状态三态可观测**：`skipped / replaced / failed`，feed 级与站点级语义分开（`src/fetchers/opml-rss.ts:148-164`、`src/index.ts:364-395`）。
+4. **按站点定制过滤规则**：AI 词 23 + 技术词 20 + 娱乐/电商黑名单 + tophub allow/block（`src/config.ts:52-141`、`src/filters/ai-related.ts:10-57`）。
+5. **工程细节讲究**：时间解析多格式防御（`src/utils/date.ts:106-150`）、GB18030 回退（`src/fetchers/tophub.ts:17-27`）、URL 去 utm 归一（`src/utils/url.ts:20-47`）、rsshub→官方 feed 替换表（`src/config.ts:15-24`）。
+6. **双语三种展示**（原文/译文/双语）+ 翻译缓存 44,632 条（`data/title-zh-cache.json`），单次上限 80 条控成本。
+7. 前端功能齐全：站/源/标题三重过滤、收藏 500 + 历史 1000（含 schema 迁移）、导出、暗色、24h/7d 切换 + 预加载。
+
+**缺点与风险**
+1. **测试形同虚设**：`vitest.config.ts:7` 指向 `tests/**/*.test.ts`，仓库里只有 `test/test-*.ts` 手工脚本，`pnpm test` 匹配 0 个文件。
+2. **DOM 强耦合**：tophub / aihubtoday 等靠页面结构选择器，实测 `aihubtoday` 当轮仍 failed，`bestblogs/aihot` 返回 0 条（`src/fetchers/aihubtoday.ts:72-115`、`data/source-status.json`）。
+3. **公众号时间戳失真**：整源共用 `lastBuildDate` 当发布时间，24h 窗口与排序被污染（`src/fetchers/wechat-rss.ts:156`）。
+4. **52 个公众号全押单主机** `decemberpei.cyou`（`wechat-rss.ts:13-65`）——单点即全灭。
+5. **翻译走 Google 非官方端点**：无限流保护、串行 80×~12s 拖长 CI、术语误译（缓存里可见 `LLM=True`→「法学硕士」）。
+6. **输出不可复现**：`randomPick=true`（`src/index.ts:264`+`src/filters/dedupe.ts:36`），同输入两次抓取结果不同。
+7. **归档通胀**：archive 37.8MB + 翻译缓存 7.7MB 每 2 小时提交一次，无分片/压缩/LFS。
+8. **故障被伪装成成功**：403/404 不抛错，返回 `ok:true` + 0 条（`src/utils/http.ts:36-40`）；时区按 runner 走，UTC runner 下相对时间偏 8 小时（`src/utils/date.ts:48-104`）。
+
+**可借鉴**：①抓取-归档-视图三层分离；②status 作一等产物（站点级 + feed 级）；③分级并发（站点 5 / RSS 20 / 公众号 10）+ 单文件加源。
+
+---
+
+### 3.3 ZipNews / World Signal —— 数据面最宽、零依赖、分析最薄
+
+**定位**：单文件后端 + 三个静态页的新闻情报原型：60 路 RSS/Google News 检索式 → Leaflet 世界地图打点 + 市场看板 + 防务/贸易「信号」看板。Python 侧 import 全为标准库，**真的零第三方依赖**（`ZipNews-main/app.py:9-27`）。
+
+**优点**
+1. **零依赖、单文件可跑**：`python3 app.py` 即起，Docker 镜像极小（`Dockerfile:14`）。
+2. **每源健康度结构化上报**，单源失败绝不拖垮整页：四类异常分别写 `status.error`，`ok/items/durationMs` 原样进 API，前端逐源红点（`app.py:1296-1376`、`static/app.js:428-440`）。
+3. **逐字段多源合并 + 数据血统**：close/open/high/low 各自回退，并回写 `quoteSource`，footer 明示来源（`app.py:1636-1728`、`static/markets.js:297-318`）——比多数商业看板诚实。
+4. **四级地理精度显式建模**：general / radar / strategic-zone / unmapped，定不到就写 pending 而非猜坐标（`app.py:1120-1141`）。
+5. **军事表述边界写进界面**，不只写在 README（`static/signals.html:93-98`）。
+6. **前端并发正确性**：`refreshId` 丢弃过期响应，避免旧数据覆盖新数据（`static/app.js:164-219`）。
+7. **响应式落地**：4 个断点、表格 ≤820px 变卡片、移动端顶栏折叠（`static/styles.css:1651-1712`、`1862-1901`）；所有 RSS 文本统一 escapeHTML。
+8. **三条刷新节奏互不干扰**：主页 10min、markets 60s、signals 300s。
+
+**缺点与风险**
+1. **词典误匹配是硬伤**：空运别名用三字 IATA，`can`（广州）、`add`（亚的斯亚贝巴）、`sin`（樟宜）都是常用英文词（`app.py:794/797/803`），又配「首命中即返回」（`app.py:1112-1117`）→ 任何含 "can" 的货运稿会被钉在广州。
+2. **地理精度被 jitter 掩盖**：坐标随机偏移最多 ±0.72°（≈80km），前端无精度提示（`static/app.js:669-674`）。
+3. **同步阻塞 + 放大面**：单请求等完所有源（`app.py:1334-1339`），最坏约 40s，市场 67 个标的 6 并发约 12 波，首屏 40–96s；`?refresh=1` 无冷却、缓存无锁，任何匿名 GET 都能触发全量重抓（`app.py:1845-1848`）；`/api/health` 零 I/O，健康检查掩盖真实可用性。
+4. **首屏重复抓取**：news 与 briefing 各抓一遍 45 路（`static/app.js:168-172` + `app.py:1444`）。
+5. **零持久化**：文章只活在内存 dict，重启即冷启，趋势/回查/聚类无地基（`app.py:956-960`，README 自己也承认）。
+6. **1980 行单文件三层耦合**：源清单、三本词典、67 个标的、抓取、打分、HTTP 路由 if 链同处一模块（`app.py:1842-1881`）。
+7. **零测试、无 CI、无锁文件**；三份 JS 各复制一遍 `escapeHTML/debounce/jitter`（`static/app.js:669-699`、`markets.js:371-390`、`signals.js:603-633`）。
+8. **文档与实现漂移**：README 称可朗读，但前端 `speechSynthesis` 零命中，`briefing.script` 无人消费（`app.py:1487`）；「信号」页面指标只是分类计数（`static/signals.js:210-217`），不是量化信号。
+
+**可借鉴**：①「来源健康度 + 静默降级」闭环；②多级地理精度显式建模；③数据血统（quoteSource/historySource）可见。
+
+---
+
+### 3.4 Insight-News —— 分析层最厚、工程卫生最差
+
+**定位**：RSS 采集 → 正文爬取 → 抽取式摘要 → LLM 偏见打分 → 事件聚类，6 小时定时流水线；前端做成分表盘与卡片流。是六个项目里唯一真正做「语义分析」的。
+
+**优点**
+1. **三路融合且中间量全部落库**：LLM 主判（0.7）+ 词法信号（0.2）+ 观点缺失惩罚（0.1），并把 biasScore/biasScoreFinal/perspectiveBalanceScore/leanDeviation/loadedWords 全部持久化，前端可解释、可回溯、可二次加权（`backend/src/services/biasAnalysisService.js:207-240`）。
+2. **以内容 hash 为核心的幂等层**：sha256 既做跨文章分析缓存复用，又做 PDF 上传去重，一处设计解决「省钱」与「防重」（`biasAnalysisService.js:272-321`、`services/pdfArticleService.js:44-130`）。
+3. **上下文预算统一收口**：1800 字常量被 LLM 与本地模型共用，TITLE+摘要+前两段+末段拼接（`biasAnalysisService.js:35,165-187`）。
+4. **LLM 输出三层容错**：剥 ```json → 退化到首个 `[...]` 切片 → 枚举与数值 clamp（`services/geminiBiasService.js:24-54,256-295`）。
+5. **限流与模型下线兜底**：429 指数退避、404 换默认模型（`services/groqBiasService.js:191-221`）。
+6. **状态机 + 外部 cron 解耦长任务**：pending → scraped → analyzed → bias_analyzed，每段可重入，cron 与前端按钮共用同一套接口（`backend/src/models/Article.js:107-110`、`.github/workflows/news-cron.yml:22-97`）。
+7. **采集侧抗偏置**：分类轮流取源 + Fisher-Yates 打散，避免单源刷屏（`services/feedSelector.js:45-57`）。
+8. **事实核查不自研**：直接代理 Google Fact Check Tools，只做字段映射与 favicon 兜底（`controllers/factCheckController.js:12-120`）——比自造判定可信。
+9. 前端信息密度高：三徽章卡片、折叠式偏见面板、事件簇 Related Coverage、7 项聚合指标 + recharts 柱/饼/极坐标、滚动触发动画。
+
+**缺点与风险**
+1. **全站零鉴权，三个写操作裸奔**：`GET /api/news/reload-news` 会写库、`POST /api/bias/run` 烧 LLM 额度、`PUT /api/bias/provider` 一个匿名请求就能切走全站供应商，而前端 Footer 还给了按钮（`routes/newsRoutes.js:14`、`routes/biasRoutes.js:6`、`components/Footer.jsx:50`）。
+2. **偏见分不可解释且被提示词框定**：终分 70% 来自模型自报 biasScore，20% 项是 `loadedWords.length/10` 这种硬编码标度；提示词里预先规定「印度语境下文化民族主义算 right、世俗/福利叙事算 left」（`services/geminiBiasService.js:138`）——政治口径是写死的，不是被验证的。
+3. **准确率评测循环论证**：ground truth 用来源标签，而模型从未见过 source 字段（`utils/biasEvaluation.js:56-72`）；两份来源表对 The Hindu 判定互相矛盾，`sourceBaselineService.js` 全库零引用。
+4. **失败即无限重试**：失败状态写回 `analyzed`，而取数条件包含 `analyzed` → 短文本文章每 6 小时重新入队、重复烧调用（`services/articleBiasRepository.js:8,43`）。
+5. **数据规模与索引缺位**：全模型仅一个索引；`GET /api/news` 无默认 limit 且整文档返回（含 10000 字 rawContent）；聚类每轮拉 200 篇做 O(n²) 相似度（`models/Article.js:100`、`controllers/articleController.js:92-130`、`services/eventClusteringService.js:114-152`）。
+6. **部署面暴露**：`vercel.json` 明文把 `/api/*` 反代到 `http://16.171.195.100:8000`（无 TLS、IP 写死）；README 只列 4 个 key，实际还依赖 3 个。
+7. **零测试、零可观测性**：0 个 test/spec，无 ESLint，50 处 console 当日志。
+8. **重复实现与死代码**：`server.js` 与 `src/app.js` 两套并行 app；`Home.jsx` 调已注释掉的接口；`biasRunner.js`、`rssRoutes.js` 整文件注释；前端三个巨型组件 429/415/714 行。
+9. **RSS 配置与轮转不一致**：14 源 6 组，但 `FEED_GROUP_ORDER` 只排了 3 组、FEEDS_PER_CYCLE=4 永远凑不满 → 7 个源（含全部体育）永不自动轮转（`services/feedSelector.js:3-7`）。
+
+**可借鉴**：①三路融合 + 中间量落库的可解释评分框架；②内容 hash 幂等层；③状态机 + cron 解耦长任务。
+
+---
+
+### 3.5 Daily-News-Briefing-Telegram-Bot —— 最小可用、风险最集中
+
+**定位**：279 行单文件 Flask 服务，把 3 个 RSS 源原文交给 `gemini-2.5-flash` 合成一条 Telegram Markdown 简报，外部 cron 每天打一次 `/trigger`。
+
+**优点**
+1. **单文件端到端跑通「抓取 → LLM → 推送」**，279 行无抽象泄漏，fork 与改造成本极低（`Daily-News-Briefing-Telegram-Bot-main/app.py:52-196`）。
+2. **零重依赖**：stdlib `urllib.request` + `xml.etree` 手解析 RSS，镜像小、冷启动快（`app.py:7-9,55-65`）。
+3. **成本闸门写进数据层**：每源硬截断 15 条，总量上限 45 条（`app.py:95-96`），单次约 $0.005。
+4. **占位符哨兵校验**：`.env` 里留着 `your_actual_...` 也判为未配置（`app.py:39-49`）。
+5. **出网请求都带超时**，单源失败返回空列表不阻断其余源（`app.py:62,100-102`）。
+6. 结构化日志 + 分级状态码（400/500/502）。
+
+**缺点与风险**
+1. **`/trigger` 完全无鉴权**，GET/POST 均可（`app.py:214`）：任何人一次请求即烧 Gemini 额度并向频道推消息，GET 还会被链接预取误触。
+2. **无缓存无状态**：每次全量重抓 3 源、不记录已推内容，同日多次触发重复推送（`app.py:235-240`）。
+3. **串行 + 无并发保护**：最坏 3×15s + Gemini（无超时）+ 20s ≈ 70s+，gunicorn 默认单 worker 期间阻塞健康检查。
+4. **错误静默且部分成功当成功**：部分源失败仍产出残缺简报并返回 `success`，Gemini 异常把原始 `e` 回给客户端（`app.py:242-265`）。
+5. **无测试无 CI**；`.gitignore` 只有一行 `.env`，`__pycache__` 残留未忽略。
+6. **依赖未锁版本**：`requirements.txt` 4 行无版本号，README 却称 "Pinned"。
+7. **源表与 README 不符**：3 个源，且键名 `"Reuters World"` 实际指向 NYT World（`app.py:32-36`）；README 宣称的 AI/Web3/宏观/政治四类不成立。
+8. **调度时区算错**：README 称 06:00 Asia/Dhaka = 8PM EST，实际差 1 小时且未处理夏令时；`app.run(debug=True)` 一旦直接运行即暴露调试器（`app.py:279`）。
+9. **Telegram 长度与转义无处理**：单条 `sendMessage` + legacy `Markdown`，超过 4096 字符或标题含 `_*[]()` 即 400，整条简报丢失，无「去掉 parse_mode 重发」的降级。
+
+**可借鉴**：①占位符哨兵配置校验；②在做抓取层就设成本闸门，而非事后求模型「简短」；③主动放弃状态（去重/排序/摘要全外包给 LLM），换零库零队列零运维。
+
+---
+
+### 3.6 world-model-patch-wire —— 概念最有价值、交付最空
+
+**定位**：每晚抓「地缘政治 + 全球市场 + 技术突破」三流，合成供 AI agent 阅读的「知识截止补丁」。核心思路：**不建 UI，让 LLM 直接 fetch 文本**——文件即 API。
+
+**优点**
+1. **把 prompt patch 当一等交付物**：直接拼装可粘贴的系统指令块，先声明「知识截止已失效 + 当前 UTC」，再给世界状态/市场上下文/波动分/因果动力学四段（`world-model-patch-wire-main/ingest_world.py:144-155`、`data/system_prompt_patch.txt:1-12`）。
+2. **双入口索引**：根 `llms.txt` 固定列端点，`data/llms.txt` 每日随数据更新（`llms.txt:6-13`、`data/llms.txt:1-7`）。
+3. **三层 payload 把结论与证据分离**：`metadata / synthesis / raw_data`，既省 token 又可回查原始标题与价格（`ingest_world.py:126-142`）。
+4. **git 即不可变时序库**：35 天连续提交，天然带 diff、可回滚、可做时序训练集（`data/archive/2026/10..11`）。
+5. **全链路零成本**：三源全部免费无 key，只有综合环节需要 `LLM_API_KEY`。
+6. **降级不炸管线**：无 key 或异常仍输出结构完整骨架，cron 不会因单点失败中断。
+7. 188 行 5 个函数，职责分明，加一条流的边际成本很低。
+
+**缺点与风险**
+1. **核心能力从未生效**：35/35 天 `world_volatility_score` 恒 5.0、`causal_analysis` 恒为 "API key missing"（`data/today.json:9-10` 及全部 archive）——产品卖点 0 交付。
+2. **失败静默且不可区分**：`raw_data` 没有 `source/status/error` 字段，`[]` 与「今日确实无内容」在 schema 中无差异（`ingest_world.py:137-141`）。
+3. **哨兵值自相矛盾**：无 key 返回 5.0（假中性），异常返回 0.0（等于宣称「世界绝对平静」），下游无法判断真实状态（`:75` vs `:109`）。
+4. **没有时间窗口概念**：条目只有 headline/summary、title/url，无 `published_at`，date 取自运行时刻，实测生成漂移在 01:47–08:30 UTC（`:28,:60,:121-122`）。
+5. **间接 prompt injection 通道**：外部 RSS/HN 文本零清洗进 user prompt，再落进 system prompt，被下游 agent 当 ground truth 摄入（`:89,:149`）；同日跨流还重复（Nvidia/Jensen Huang 同时在 geopolitics 与 tech），无去重。
+6. **零测试零校验**：无 test/、无 .gitignore、无 LICENSE，`schema_version` 硬编码且无人读取。
+7. **发布路径脆弱**：token 拼进 clone URL、无并发锁、浅克隆上 `git pull --rebase`、无失败告警（`.github/workflows/patch_cron.yml:20,39-46`）。
+
+**可借鉴**：①以 llms.txt + prompt patch 作为交付物（六项目里最有前瞻性的产品判断）；②把「知识过期」建模成可版本化补丁（date / generated_at_utc / schema_version / volatility 四元组）；③三层 payload + 同日双格式（JSON 给机器、纯文本给人/LLM）。
+
+---
+
+## 四、横向能力矩阵
+
+能力项说明：● 完整实现 / ◐ 部分实现 / ○ 未实现
+
+| 能力 | AI-Search | ai-news | ZipNews | Insight-News | Daily Bot | world-model |
+|:--|:--:|:--:|:--:|:--:|:--:|:--:|
+| 多源抓取（≥40 源） | ● 48 | ● 15 管线 | ● 60 | ○ 14 且仅 3 组轮转 | ○ 3 | ○ 3 流 |
+| 抓取失败隔离 | ● | ● | ● | ◐ | ◐ | ○ 静默 |
+| 源健康可视 | ● 死源告警 | ● 三态 status | ● 逐源红点 | ○ | ○ | ○ |
+| 语义级去重 | ● Jaccard 0.65 | ○ 精确键 | ○ 标题归一 | ○ 仅 link 唯一 | ○ 交 LLM | ○ |
+| AI/LLM 深度分析 | ◐ 一句话点评 | ○ 仅翻译 | ○ | ● 偏见评分+核查+聚类 | ◐ 一次性合成 | ○ 未运行 |
+| 事实核查 | ○ | ○ | ○ | ● 代理 Google FC | ○ | ○ |
+| 地理/空间展现 | ○ | ○ | ● Leaflet 地图 | ○ | ○ | ○ |
+| 市场/金融数据 | ○ | ○ | ● 三源合并 | ○ | ○ | ◐ 2 币种 |
+| 历史归档/时序查询 | ● 快照+archive | ● archive 90k 条 | ○ 内存 | ● MongoDB | ○ | ● git 提交 |
+| 交互式图表/搜索 | ● SVG+⌘K | ● 过滤+搜索 | ● 排序表+sparkline | ● recharts | ○ | ○ |
+| 开放 API / Agent 接入 | ● JSON API+SKILL.md | ○ JSON 文件 | ● REST | ● REST（无鉴权） | ○ | ● llms.txt+patch |
+| 推送/订阅通道 | ○ | ○ | ○ | ○ | ● Telegram | ○ |
+| 自动化 CI | ● | ● | ○ | ● | ○ 外部 cron | ● |
+| 测试 | ◐ 84 例纯函数 | ○ 0 有效 | ○ | ○ | ○ | ○ |
+| 鉴权 | ◐ Worker 代理 | ○ | ○ | ○ | ○ | ○ |
+
+**几个尖锐对照**
+
+- **源多 ≠ 信息好**：ZipNews 60 路但对 45 个 RSS 只做「标题归一去重 + 词典定位」，同一事件在 8 家媒体的 8 条重复报道会全部留在地图上；AI-Search 只有 48 路却做了近似合并与事件聚合。
+- **分析 ≠ 有 LLM**：Daily Bot 有 Gemini，但把去重/排序/摘要全交给模型且无输出校验，可复现性为零；Insight-News 的 LLM 只是三路信号之一，其余两路可审计。
+- **展现分高是因为架构简单**：ZipNews 与 ai-news 的展现评分高，靠的是「静态页面 + JSON」，不是复杂模型。
+- **工程分低不是因为代码少**：世界模型项目只有 188 行，工程质量仍只有 2/5——分低在「静默失败 + 无时间语义 + 无告警」。
+
+---
+
+## 五、跨项目共性缺陷（六项目反复踩的 8 个坑）
+
+| # | 缺陷 | 出现项目与证据 | 后果 |
+|:--:|:--|:--|:--|
+| 1 | **写操作/触发接口无鉴权** | Daily Bot `/trigger`（`app.py:214`）；Insight-News 三个写接口 + Footer 按钮；ZipNews `?refresh=1` 无冷却 | 匿名即可烧 LLM 额度、写库、切换供应商、触发全量重抓 |
+| 2 | **测试形同虚设** | ai-news `pnpm test` 匹配 0 文件；AI-Search 仅纯函数；其余 4 项目 0 测试 | 抓取器改版、时区、去重回归全靠人肉发现 |
+| 3 | **失败静默** | world-model `except→[]`；Daily Bot 部分成功当成功；ai-news 403 记 `ok:true`；ZipNews `/api/health` 零 I/O | 空数据被当作「今天世界很平静」 |
+| 4 | **README 与实现漂移** | world-model「完整一天」但无 `published_at`；ZipNews「可朗读」无 `speechSynthesis`；Daily Bot「四类源」实为 3 个且 Reuters 指向 NYT；ai-news「14 平台」实为 13 + 多个 0 条 | 评估者被文档误导，交接成本转移给下一个人 |
+| 5 | **无持久化/归档通胀** | ZipNews 仅内存 dict；ai-news archive 37.8MB 每 2h 提交；AI-Search 8.5MB 日更整文件重写 | 无法回查趋势；仓库体积随天数线性膨胀 |
+| 6 | **时区口径分裂** | AI-Search UTC vs 北京时；ai-news 跟随 runner；Daily Bot Dhaka≠EST 差 1 小时 | 「24 小时窗口」不可复现，日报边界漂移 |
+| 7 | **成本/配额无计量** | 全部 6 项目均无 token 计数与预算告警 | 模型涨价或循环重试时无法定位烧钱点（Insight-News 的无限重试即典型） |
+| 8 | **再分发与版权裸露** | AI-Search `/api/v1` 全量再分发 44 源摘要 + 公众号镜像；ai-news 52 个公众号单主机镜像 | 站点可持续性依赖未授权再分发 |
+
+---
+
+## 六、选型建议与组合方案
+
+### 6.1 按目标选型
+
+| 你的目标 | 首选 | 理由 | 必须补的短板 |
+|:--|:--|:--|:--|
+| 快速搭一个可 Fork 的行业资讯站 | **AI-Search** | 换源即换站、零服务器、API/SKILL 齐全、测试最好 | 分片加载、时区统一、补抓取侧测试 |
+| 要「全球 + 地图 + 市场」态势感知 | **ZipNews** | 60 路、零依赖、来源健康度与数据血统最诚实 | 地理实体识别（换掉 IATA 词典）、异步抓取、加持久化 |
+| 做媒体偏见/事实核查研究 | **Insight-News** | 唯一有可解释多维评分 + 核查 + 聚类 + 状态机 | 鉴权、来源表统一、评测集去循环论证、索引与分页 |
+| 给 LLM/Agent 供给「今日世界状态」 | **world-model-patch-wire 的思路** | llms.txt + prompt patch + 三层 payload 是正确抽象 | LLM 环节真正跑起来、加 published_at、输入清洗、失败可观测 |
+| 做每日简报推送 | **Daily Bot** | 279 行端到端，改造成本最低 | 鉴权、4096 分段与转义降级、代码层去重、锁版本 |
+| 多语言双语资讯 | **ai-news-aggregator** | 70 RSS + 52 公众号 + 翻译缓存最成熟 | 修公众号时间戳、换官方翻译、archive 分片 |
+
+### 6.2 推荐的组合架构（各取所长）
+
+```
+[采集层]  AI-Search 的 crawl 编排（allSettled 隔离 + 分级并发 + 死源 exit 1）
+          + ai-news 的 OPML·公众号适配器（补中文源）
+          + ZipNews 的 source health 上报格式（逐源 ok/items/durationMs）
+              ↓
+[规范化]  AI-Search 的三段去重（URL→标题→Jaccard） + 单一 archive 事实源
+              ↓
+[分析层]  Insight-News 的三路融合（LLM 主判 + 词法 + 来源基线，中间量全落库）
+          + 事件聚类（Jaccard 0.45 阈值）
+          + ZipNews 的地理精度四级模型（general/radar/zone/unmapped）
+              ↓
+[存储层]  MongoDB（文章 + 评分 + 事件簇）/ git 快照（对外只读时序）
+              ↓
+[交付层]  ① ZipNews 式地图/市场看板  ② AI-Search 式静态 JSON API + SKILL.md
+          ③ world-model 式 llms.txt + prompt patch  ④ Telegram 推送通道
+              ↓
+[治理层]  鉴权（所有写接口）· 预算与配额计量 · 时区统一 UTC 存储 + 本地化展示 · 失败告警
+```
+
+**一句话总结**：这六个项目单独看都不完整，但合起来恰好覆盖了「获取—规范化—分析—展现—交付—治理」的完整链条；每一步都有一个项目做得比其余好，把它们的最优实现拼起来，比任何一个原项目都完整。
+
+---
+
+## 附录：审计方法与局限
+
+- **取证方式**：6 个项目并行只读审计，每个项目实际读到入口文件、抓取/分析服务、前端关键组件、CI 配置与归档数据；横向另做了规模统计（文件数/行数）、依赖与测试/CI 盘点、LLM 调用点分布统计、数据源条目计数。
+- **修正了若干 README 声明**：如 ai-news 的「14 平台」实为 13 + 15 条管线、测试实际 0 覆盖；Daily Bot 的「262 行/四类源/Pinned 依赖」均不成立；world-model 的「每晚完整一天」不可实现。
+- **局限**：未联网验证各站点当前可抓性；未运行任何项目（只读审计）；评分是工程判断，非基准测试结果；`文件:行` 证据基于当前快照，后续改动可能位移。
+- **未纳入**：各项目 README 中的截图、Star 数等宣传性指标；许可证与合规的完整审查。

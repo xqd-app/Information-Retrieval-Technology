@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-24",
+  "generatedAt": "2026-11-24T06:05:53.156Z",
+  "picks": [
+    {
+      "title": "OpenAI and Cisco introduce Shirudo",
+      "sourceUrl": "https://openai.com/index/introducing-shirudo",
+      "source": "OpenAI",
+      "reason": "OpenAI与思科开源Linux运行时，大厂合作重磅"
+    },
+    {
+      "title": "Finding faster quantum algorithms with agents and formal verification",
+      "sourceUrl": "https://deepmind.google/blog/finding-faster-quantum-algorithms-with-agents-and-formal-verification/",
+      "source": "Google DeepMind",
+      "reason": "DeepMind用智能体与形式验证加速量子算法"
+    },
+    {
+      "title": "Many languages, one common neural code",
+      "sourceUrl": "https://news.mit.edu/2026/many-languages-one-common-neural-code-1123",
+      "source": "MIT News",
+      "reason": "MIT跨21种语言发现共通神经编码"
+    },
+    {
+      "title": "Supercharging transformer residual connections",
+      "sourceUrl": "https://research.google/blog/supercharging-transformer-residual-connections/",
+      "source": "Google Research",
+      "reason": "谷歌研究改进Transformer残差连接"
+    },
+    {
+      "title": "Verifiable On-Policy Distillation",
+      "sourceUrl": "http://arxiv.org/abs/2611.30325v1",
+      "source": "arXiv",
+      "reason": "可验证在线策略蒸馏，推理训练新方法"
+    }
+  ],
+  "trendSummary": "本周AI热点集中在模型底层优化与智能体落地，从残差连接改进到机器人操作、代码清理，同时隐私金融等垂直场景应用加速。"
+}

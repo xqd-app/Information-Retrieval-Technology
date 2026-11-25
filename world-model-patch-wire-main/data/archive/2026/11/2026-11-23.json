@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "date": "2026-11-23",
+    "generated_at_utc": "2026-11-23T04:05:35.288087+00:00",
+    "world_volatility_score": 5.0,
+    "schema_version": "1.0.0"
+  },
+  "synthesis": {
+    "causal_analysis": "API key missing. Unable to synthesize causal links.",
+    "compressed_system_prompt": "Knowledge cutoff patch unavailable today."
+  },
+  "raw_data": {
+    "geopolitics": [
+      {
+        "headline": "COP31 fails to reach major climate deal as talks expose deep divisions",
+        "summary": "Hopes for an agreement on tackling climate change collapsed after a row about mentioning fossil fuels"
+      },
+      {
+        "headline": "What's next after no deal at COP31 climate talks?",
+        "summary": "The talks have been the longest-running in the summit's history, with negotiations breaking down two days after they had been due to end."
+      },
+      {
+        "headline": "Boy, 7, pulled alive from rubble hours after Russian strike on Ukraine, rescuers say",
+        "summary": "Nine people are dead in the attack, with rescue efforts ongoing to find those still missing from the residential building."
+      },
+      {
+        "headline": "San Francisco is enjoying an AI boom, but worries about a crash are growing",
+        "summary": "AI employees in the industry's epicentre - San Francisco - worry that the sector is overheated."
+      },
+      {
+        "headline": "Burnham to tell MPs 'landmark' EU deal could make next decade 'much better'",
+        "summary": "The prime minister will tell MPs the deal agreed on Friday is a \"choice between a broken status quo or change\"."
+      }
+    ],
+    "markets": {
+      "BTC_USD": {
+        "price": 61220,
+        "24h_change": 2.952808962542195
+      },
+      "ETH_USD": {
+        "price": 1730.9,
+        "24h_change": 4.083975885330431
+      }
+    },
+    "tech_zeitgeist": [
+      {
+        "title": "Free alternative TV network built from the Internet Archive's forgotten videos",
+        "url": "https://spelunkr.tv"
+      },
+      {
+        "title": "A Beginner's Guide to Local AI with Inkling, Qwen, and Unsloth",
+        "url": "https://www.gpupartner.com/blog/beginners-guide-local-ai-inkling-qwen-unsloth"
+      },
+      {
+        "title": "Masullo on the Riemann Hypothesis",
+        "url": "https://johncarlosbaez.wordpress.com/2026/11/22/masullo-on-the-riemann-hypothesis/"
+      },
+      {
+        "title": "The Birds of GTA 6: A Field Guide to Vice City and Leonida's Wildlife",
+        "url": "https://www.audubon.org/magazine/birds-of-gta-6-field-guide-vice-city-wildlife"
+      },
+      {
+        "title": "Cathedral floor emerges in Sudan, revealing one of the biggest medieval churches",
+        "url": "https://apnews.com/article/sudan-antiquities-nubia-cathedral-1b16f67da881ee5592de4481ee55c527"
+      }
+    ]
+  }
+}

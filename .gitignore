@@ -1,0 +1,36 @@
+# ---------- 依赖 / 构建产物 ----------
+node_modules/
+.next/
+dist/
+build/
+out/
+coverage/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ---------- 编辑器 / 系统 ----------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+
+# ---------- 第三方仓库里的超大缓存（体积大、可重新生成）----------
+ai-news-aggregator-main/data/archive.json
+ai-news-aggregator-main/data/title-zh-cache.json
+Insight-News-main/frontend/public/homeLogo/
+
+# ---------- 可重新生成的地理原始数据（land.json / land_dots.json 保留）----------
+pip_app/data/land_raw_50m.geojson
+pip_app/data/land_raw_110m.geojson
+pip_app/data/land_raw.geojson
+
+# ---------- 本地运行产物 ----------
+pip_app/data/geo_self.json
+*.log
+.pytest_cache/

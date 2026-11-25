@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "date": "2026-11-22",
+    "generated_at_utc": "2026-11-22T03:32:15.469347+00:00",
+    "world_volatility_score": 5.0,
+    "schema_version": "1.0.0"
+  },
+  "synthesis": {
+    "causal_analysis": "API key missing. Unable to synthesize causal links.",
+    "compressed_system_prompt": "Knowledge cutoff patch unavailable today."
+  },
+  "raw_data": {
+    "geopolitics": [
+      {
+        "headline": "Zelensky says Crimean Bridge strikes 'fair response' as he meets UK's Streeting",
+        "summary": "Ukraine's president says Kyiv acted after 109 separate Russian aerial attacks on bridges in Ukraine."
+      },
+      {
+        "headline": "Russia-bound ship attacked in Gulf of Finland",
+        "summary": "Finnish defence forces say that Ukraine was likely behind the drone attack on the vessel."
+      },
+      {
+        "headline": "Fight over fossil fuels leaves COP31 climate talks in deadlock",
+        "summary": "Countries from nearly 200 countries are in a deadlock to try and get a new global climate agreement."
+      },
+      {
+        "headline": "Mexican drug lord on FBI's 10 most wanted list arrested in shoot-out",
+        "summary": "Fausto Isidro \"Chapo Idisro\" Meza Flores, who is accused of drug trafficking and torture, is detained after gun fight with authorities."
+      },
+      {
+        "headline": "FBI reportedly investigating apparent hack of its criminal database",
+        "summary": "The National Crime Information Center database is used by federal and local law enforcement to share information."
+      }
+    ],
+    "markets": {
+      "BTC_USD": {
+        "price": 59269,
+        "24h_change": 2.3445307608440014
+      },
+      "ETH_USD": {
+        "price": 1660.07,
+        "24h_change": 4.031387768434627
+      }
+    },
+    "tech_zeitgeist": [
+      {
+        "title": "Pill to treat pancreatic cancer hailed as 'biggest breakthrough in decades'",
+        "url": "https://www.theguardian.com/society/2026/nov/20/pill-pancreatic-cancer-breakthrough-daraxonrasib"
+      },
+      {
+        "title": "Lean verification of the Riemann Hypothesis",
+        "url": "https://leanprover-community.github.io/blog/posts/riemann-hypothesis/"
+      },
+      {
+        "title": "Inkling-2-Mini in 5.4 GB Memory",
+        "url": "https://github.com/ShinMegamiBoson/lookatmyquant"
+      },
+      {
+        "title": "Data Processing Incidents on Inference Providers",
+        "url": "https://openrouter.ai/blog/announcements/data-processing-incidents-on-inference-providers/"
+      },
+      {
+        "title": "Leonida \u2013 PC Recompilation of the Xbox Version of GTA 6",
+        "url": "https://github.com/ItsNotRexed/Leonida"
+      }
+    ]
+  }
+}

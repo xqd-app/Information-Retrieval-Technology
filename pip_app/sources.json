@@ -1,0 +1,255 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-11-24",
+  "note": "31 源：ai/geopol 24 源（2026-11-24 实测）+ skills/oss 7 源（2026-11-25 实测，GitHub Trending 走社区 RSS，Anthropic/MCP/n8n 当前不可达未纳入）",
+  "sources": [
+    {
+      "id": "techcrunch-ai",
+      "name": "TechCrunch AI",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+      "tier": 1
+    },
+    {
+      "id": "ars-technica",
+      "name": "Ars Technica",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://feeds.arstechnica.com/arstechnica/technology-lab",
+      "tier": 2
+    },
+    {
+      "id": "theverge",
+      "name": "The Verge",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://www.theverge.com/rss/index.xml",
+      "tier": 1
+    },
+    {
+      "id": "mit-tech-review",
+      "name": "MIT Technology Review",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://www.technologyreview.com/feed/",
+      "tier": 1
+    },
+    {
+      "id": "google-ai-blog",
+      "name": "Google AI Blog",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://blog.google/technology/ai/rss/",
+      "tier": 1
+    },
+    {
+      "id": "deepmind",
+      "name": "Google DeepMind",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://deepmind.google/blog/rss.xml",
+      "tier": 1
+    },
+    {
+      "id": "huggingface-blog",
+      "name": "Hugging Face Blog",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://huggingface.co/blog/feed.xml",
+      "tier": 2
+    },
+    {
+      "id": "hn-frontpage",
+      "name": "Hacker News",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://news.ycombinator.com/rss",
+      "tier": 2
+    },
+    {
+      "id": "simonwillison",
+      "name": "Simon Willison",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://simonwillison.net/atom/everything/",
+      "tier": 3
+    },
+    {
+      "id": "github-blog",
+      "name": "GitHub Blog",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://github.blog/feed/",
+      "tier": 3
+    },
+    {
+      "id": "ithome",
+      "name": "IT之家",
+      "domain": "ai",
+      "lang": "zh",
+      "url": "https://www.ithome.com/rss/",
+      "tier": 3
+    },
+    {
+      "id": "qbitai",
+      "name": "量子位",
+      "domain": "ai",
+      "lang": "zh",
+      "url": "https://www.qbitai.com/feed",
+      "tier": 1
+    },
+    {
+      "id": "google-news-ai",
+      "name": "Google News · AI",
+      "domain": "ai",
+      "lang": "en",
+      "url": "https://news.google.com/rss/search?q=artificial+intelligence&hl=en-US&gl=US&ceid=US:en",
+      "tier": 2
+    },
+    {
+      "id": "aljazeera",
+      "name": "Al Jazeera",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.aljazeera.com/xml/rss/all.xml",
+      "tier": 1
+    },
+    {
+      "id": "cnbc-world",
+      "name": "CNBC World",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100727362",
+      "tier": 2
+    },
+    {
+      "id": "guardian-world",
+      "name": "The Guardian World",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.theguardian.com/world/rss",
+      "tier": 1
+    },
+    {
+      "id": "politico",
+      "name": "Politico",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://rss.politico.com/politics-news.xml",
+      "tier": 2
+    },
+    {
+      "id": "thehill",
+      "name": "The Hill",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://thehill.com/feed/",
+      "tier": 3
+    },
+    {
+      "id": "npr-world",
+      "name": "NPR World",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://feeds.npr.org/1004/rss.xml",
+      "tier": 2
+    },
+    {
+      "id": "france24",
+      "name": "France 24",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.france24.com/en/rss",
+      "tier": 2
+    },
+    {
+      "id": "euronews",
+      "name": "Euronews",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://feeds.feedburner.com/euronews/en/news/",
+      "tier": 3
+    },
+    {
+      "id": "scmp",
+      "name": "South China Morning Post",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.scmp.com/rss/91/feed",
+      "tier": 1
+    },
+    {
+      "id": "financial-times",
+      "name": "Financial Times",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.ft.com/rss/home",
+      "tier": 1
+    },
+    {
+      "id": "wsj-markets",
+      "name": "WSJ Markets",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",
+      "tier": 2
+    },
+    {
+      "id": "openai-news",
+      "name": "OpenAI News",
+      "domain": "skills",
+      "lang": "en",
+      "url": "https://openai.com/news/rss.xml",
+      "tier": 1
+    },
+    {
+      "id": "the-decoder",
+      "name": "The Decoder",
+      "domain": "skills",
+      "lang": "en",
+      "url": "https://the-decoder.com/feed/",
+      "tier": 2
+    },
+    {
+      "id": "product-hunt",
+      "name": "Product Hunt",
+      "domain": "skills",
+      "lang": "en",
+      "url": "https://www.producthunt.com/feed",
+      "tier": 3
+    },
+    {
+      "id": "latent-space",
+      "name": "Latent Space",
+      "domain": "skills",
+      "lang": "en",
+      "url": "https://www.latent.space/feed",
+      "tier": 3
+    },
+    {
+      "id": "infoq-cn",
+      "name": "InfoQ 中文",
+      "domain": "skills",
+      "lang": "zh",
+      "url": "https://www.infoq.cn/feed",
+      "tier": 3
+    },
+    {
+      "id": "gh-trending",
+      "name": "GitHub Trending",
+      "domain": "oss",
+      "lang": "en",
+      "url": "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml",
+      "tier": 1
+    },
+    {
+      "id": "gh-changelog",
+      "name": "GitHub Changelog",
+      "domain": "oss",
+      "lang": "en",
+      "url": "https://github.blog/changelog/feed/",
+      "tier": 2
+    }
+  ]
+}

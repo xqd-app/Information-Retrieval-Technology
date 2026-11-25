@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Fixture Atom</title>
+  <updated>2026-11-24T02:10:00Z</updated>
+  <entry>
+    <title>World model scaling laws revisited</title>
+    <link rel="alternate" href="https://example.org/atom-1"/>
+    <published>2026-11-24T01:45:00Z</published>
+    <summary type="html">&lt;p&gt;A short note on &lt;em&gt;scaling&lt;/em&gt;.&lt;/p&gt;</summary>
+  </entry>
+  <entry>
+    <title>Entry without published time</title>
+    <link rel="alternate" href="https://example.org/atom-2"/>
+    <summary>No timestamp field here.</summary>
+  </entry>
+</feed>

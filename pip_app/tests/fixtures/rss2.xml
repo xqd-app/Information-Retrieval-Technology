@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Fixture RSS</title>
+    <link>https://example.com/</link>
+    <lastBuildDate>Mon, 24 Nov 2026 02:00:00 GMT</lastBuildDate>
+    <item>
+      <title>  Nvidia datacenter revenue up 94%  </title>
+      <link>https://example.com/a?utm_source=rss</link>
+      <pubDate>Mon, 24 Nov 2026 01:30:00 GMT</pubDate>
+      <description><![CDATA[<p>Datacenter revenue <b>up 94%</b> year over year.</p>]]></description>
+      <guid>https://example.com/a</guid>
+    </item>
+    <item>
+      <title>OpenAI ships a new model</title>
+      <link>https://example.com/b</link>
+      <pubDate>Mon, 24 Nov 2026 01:00:00 GMT</pubDate>
+      <description>No markup here.</description>
+    </item>
+  </channel>
+</rss>

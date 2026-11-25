@@ -1,0 +1,12 @@
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.html
+packetvoyage_maps/
+dist/
+build/
+*.egg-info/
