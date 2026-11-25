@@ -258,6 +258,40 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
 .rows .track{flex:1;height:6px;background:rgba(34,211,238,.10);overflow:hidden}
 .rows .track i{display:block;height:100%;box-shadow:0 0 12px rgba(34,211,238,.5)}
 .rows .val{flex:0 0 44px;text-align:right;font-family:var(--num);font-size:10.5px;color:var(--cy-b)}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.wcard{position:relative;padding:14px 16px;background:linear-gradient(155deg, rgba(8,30,50,.9), rgba(3,12,22,.94));
+  border:1px solid var(--line-2);
+  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);transition:.16s}
+.wcard:hover{border-color:var(--line);box-shadow:0 0 22px rgba(34,211,238,.18)}
+.wcard.wide{grid-column:1/-1}
+.wcard.blind{opacity:.62;border-style:dashed}
+.wcard.thin{border-color:rgba(255,154,31,.45)}
+.wcard.covered{border-color:rgba(34,211,238,.4)}
+.wcard h4{margin:0;font-family:var(--num);font-size:12px;letter-spacing:1.8px;color:#cdefff}
+.wtop{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.wdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.covered .wdot{background:#22d3ee;box-shadow:0 0 10px #22d3ee}
+.thin .wdot{background:#ff9a1f;box-shadow:0 0 10px #ff9a1f}
+.blind .wdot{background:#446a85}
+.wtg{margin-left:auto;font-family:var(--num);font-size:8.5px;letter-spacing:1.2px;color:var(--dim)}
+.wnum{display:flex;align-items:baseline;gap:5px;margin-bottom:6px}
+.wnum b{font-family:var(--num);font-size:20px;font-weight:700;color:#eafcff;text-shadow:0 0 14px rgba(34,211,238,.4)}
+.wnum span{font-size:9.5px;color:var(--dim);margin-right:8px}
+.wct{margin:0;font-size:10.5px;line-height:1.6;color:var(--muted);font-family:var(--num);letter-spacing:.4px}
+.wcover{display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin:6px 0 10px}
+.wring{position:relative;width:96px;height:96px;border-radius:50%;flex:0 0 auto;
+  background:conic-gradient(var(--cy) calc(var(--pct) * 1%), rgba(34,211,238,.10) 0);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 26px rgba(34,211,238,.28), inset 0 0 22px rgba(2,10,18,.9)}
+.wring::after{content:"";position:absolute;inset:7px;border-radius:50%;background:#04101d}
+.wring span{position:relative;z-index:1;font-family:var(--num);font-size:24px;font-weight:700;color:#eafcff;
+  text-shadow:0 0 16px rgba(34,211,238,.6)}
+.wring span i{font-style:normal;font-size:11px;color:var(--cy);margin-left:1px}
+.wstats{display:grid;grid-template-columns:repeat(2,minmax(82px,1fr));gap:8px 20px}
+.wstats div{display:flex;flex-direction:column}
+.wstats b{font-family:var(--num);font-size:17px;color:#dff6ff}
+.wstats span{font-size:9.5px;letter-spacing:1.2px;color:var(--dim)}
+.wblind{margin:0;font-family:var(--num);font-size:10px;letter-spacing:.8px;color:var(--muted)}
 .hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:9px}
 .hcard{display:flex;align-items:center;gap:10px;padding:10px 13px;
   background:linear-gradient(150deg, rgba(7,26,44,.86), rgba(3,12,22,.92));
@@ -328,6 +362,9 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
         <a href="#panel" data-view="health">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg>源健康
         </a>
+        <a href="#panel" data-view="world">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M2 8h12"/><path d="M8 2c2.5 2 2.5 10 0 12"/></svg>全球扫描
+        </a>
         <a href="#panel" data-view="feed">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l6 3-6 3-6-3 6-3zM2 8l6 3 6-3M2 11.5l6 3 6-3"/></svg>全部 __TOTAL__ 条
         </a>
@@ -363,6 +400,7 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
     <button class="tab on" data-view="feed">条目</button>
     <button class="tab" data-view="dist">分布</button>
     <button class="tab" data-view="health">健康</button>
+    <button class="tab" data-view="world">世界</button>
   </div>
 </section>
 
@@ -386,6 +424,7 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
   <div id="view-feed" class="list"></div>
   <div id="view-dist" class="dist-grid hidden"></div>
   <div id="view-health" class="hgrid hidden"></div>
+  <div id="view-world" class="wgrid hidden"></div>
 </section>
 
 <div class="foot">PIP v1.0 · INTELLIGENCE COMMAND CENTER · __SOURCES__ SOURCES · PRESS <span class="kbd">/</span> TO SEARCH</div>
@@ -396,6 +435,7 @@ const HEALTH = __HEALTH__;
 const GLOBE = __GLOBE__;
 const LAND = __LAND__;
 const LAND_DOTS = __LAND_DOTS__;
+const WORLD = __WORLD__;
 
 const DOMAIN_META = {ai:"AI", geopol:"政经", skills:"AI 技能", oss:"GitHub"};
 const DOMAIN_COLOR = {ai:"#a78bfa", geopol:"#22d3ee", skills:"#38bdf8", oss:"#ff9a1f"};
@@ -756,6 +796,47 @@ function renderHealthCards(){
   }).join("");
 }
 
+/* ================= 全球覆盖 ================= */
+const REGION_STATUS = {covered: "已覆盖", thin: "薄弱", blind: "盲区"};
+
+function renderWorld(){
+  const w = WORLD || {};
+  const cov = w.coverage || {};
+  const regions = (w.regions || []).slice().sort((a, b) => b.source_count - a.source_count);
+  const blind = w.blind_spots || [];
+  const pct = cov.pct || 0;
+
+  const head = `
+    <div class="wcard wide">
+      <h4>GLOBAL COVERAGE</h4>
+      <div class="wcover">
+        <div class="wring" style="--pct:${pct}">
+          <span>${pct}<i>%</i></span>
+        </div>
+        <div class="wstats">
+          <div><b>${cov.regions_covered || 0}/${cov.regions_total || 0}</b><span>区域有源</span></div>
+          <div><b>${cov.countries_covered || 0}</b><span>国家</span></div>
+          <div><b>${cov.sources_total || 0}</b><span>信息源</span></div>
+          <div><b>${cov.items_total || 0}</b><span>今日条目</span></div>
+        </div>
+      </div>
+      <p class="wblind">盲区 ${blind.length} 个：${blind.map(b => b.region).join(" · ") || "无"}</p>
+    </div>`;
+
+  const cards = regions.map(r => {
+    const st = r.status || "blind";
+    const countries = (r.countries || []).map(c => `${c.name} ${c.sources}`).join(" · ") || "—";
+    return `<div class="wcard ${st}">
+      <div class="wtop"><span class="wdot"></span><h4>${esc(r.region)}</h4>
+        <span class="wtg">${REGION_STATUS[st] || st}</span></div>
+      <div class="wnum"><b>${r.source_count}</b><span>源</span><b>${r.item_count}</b><span>条</span></div>
+      <p class="wct">${esc(countries)}</p>
+    </div>`;
+  }).join("");
+
+  $("view-world").innerHTML = head + cards;
+}
+
 /* ================= 列表 ================= */
 function renderFilters(rows){
   const present = [...new Set(rows.map(r => r.domain))];
@@ -805,11 +886,13 @@ function setView(view, rows){
   $("view-feed").classList.toggle("hidden", view !== "feed");
   $("view-dist").classList.toggle("hidden", view !== "dist");
   $("view-health").classList.toggle("hidden", view !== "health");
-  $("filters").classList.toggle("hidden", view === "health");
-  const titles = {feed: "今日条目", dist: "数据分布", health: "源健康"};
+  $("view-world").classList.toggle("hidden", view !== "world");
+  $("filters").classList.toggle("hidden", view === "health" || view === "world");
+  const titles = {feed: "今日条目", dist: "数据分布", health: "源健康", world: "全球覆盖扫描"};
   $("panel-title").textContent = titles[view] || "";
   if(view === "dist") renderDist(rows);
   if(view === "health") renderHealthCards();
+  if(view === "world") renderWorld();
   if(view === "feed") renderList(rows);
 }
 
@@ -844,7 +927,14 @@ renderFilters(rows);
 renderList(rows);
 renderDist(rows);
 renderHealthCards();
+renderWorld();
 bind(rows);
+
+/* 支持 #world / #dist 直达视图，方便分享与截图 */
+(function initialView(){
+  const view = (location.hash || "").replace("#", "");
+  if(["feed", "dist", "health", "world"].indexOf(view) >= 0) setView(view, rows);
+})();
 </script>
 </body>
 </html>
@@ -895,6 +985,15 @@ def build(items_path: Path | None = None, health_path: Path = HEALTH_FILE, out: 
     land_json = _read_json(ROOT / "data" / "land.json")
     dots_json = _read_json(ROOT / "data" / "land_dots.json", "[]")
     hacker_b64 = _read_json(ROOT / "web" / "assets" / "hacker.b64.txt", "")
+    world_json = "null"
+    try:
+        from pip_app.world_scan import load_items as _load_items, load_sources as _load_sources, scan as _scan
+
+        world_json = json.dumps(
+            _scan(_load_sources(SOURCES_FILE), _load_items(items_path)), ensure_ascii=False
+        ).replace("</", "<\\/")
+    except Exception:  # noqa: BLE001 - 扫描失败不影响页面生成
+        pass
     high = sum(1 for i in items if i.get("time_confidence") == "high")
     countries = len({i["source_id"] for i in items})
 
@@ -905,6 +1004,7 @@ def build(items_path: Path | None = None, health_path: Path = HEALTH_FILE, out: 
         .replace("__LAND__", land_json)
         .replace("__LAND_DOTS__", dots_json)
         .replace("__HACKER__", hacker_b64)
+        .replace("__WORLD__", world_json)
         .replace("__DATE__", items_path.stem)
         .replace("__TOTAL__", str(len(items)))
         .replace("__SOURCES__", str(len({i["source_id"] for i in items})))

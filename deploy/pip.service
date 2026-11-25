@@ -1,0 +1,44 @@
+[Unit]
+Description=PIP 情报日报 · Intelligence Server
+Documentation=https://github.com/xqd-app/Information-Retrieval-Technology
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pip
+Group=pip
+WorkingDirectory=/opt/pip
+Environment=PYTHONUNBUFFERED=1
+Environment=PIP_HOST=0.0.0.0
+Environment=PIP_PORT=8080
+Environment=PIP_LOG_LEVEL=INFO
+Environment=PIP_AUTO_COLLECT=1
+Environment=PIP_COLLECT_INTERVAL=21600
+# 固定采集端（不设则自动检测出口 IP）
+# Environment=PIP_ORIGIN_CITY=Kunming
+
+ExecStart=/opt/pip/.venv/bin/python -m pip_app.server
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+KillSignal=SIGTERM
+
+# 安全加固
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/pip/pip_app/data
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+# 资源限制
+MemoryMax=512M
+TasksMax=256
+
+[Install]
+WantedBy=multi-user.target

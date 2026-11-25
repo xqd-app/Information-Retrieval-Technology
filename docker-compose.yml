@@ -1,0 +1,32 @@
+services:
+  pip:
+    build: .
+    image: pip-intel:1.1
+    container_name: pip-intel
+    ports:
+      - "8080:8080"
+    environment:
+      PIP_HOST: "0.0.0.0"
+      PIP_PORT: "8080"
+      PIP_LOG_LEVEL: "INFO"
+      # 打开后每 6 小时自动采集 + 重建页面
+      PIP_AUTO_COLLECT: "1"
+      PIP_COLLECT_INTERVAL: "21600"
+      # 采集端：不设则自动检测出口 IP；要固定在云南就解开下面两行
+      # PIP_ORIGIN_CITY: "Kunming"
+      # PIP_ORIGIN_LATLON: "25.0389,102.7183"
+    volumes:
+      # 采集数据持久化，容器重建不丢
+      - ./pip_app/data:/app/pip_app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -347,3 +347,42 @@ cd pip_skeleton && python -m unittest discover -s tests -t .        # 70 例
 ```
 
 合计 **126 例**，全部离线（fixture 回放，不联网、不调 LLM）。
+
+---
+
+## 部署（生产）
+
+`pip_app.server` 是生产入口（`pip_app.serve` 仅供本地调试）：
+
+```bash
+PIP_HOST=0.0.0.0 PIP_PORT=8080 PIP_AUTO_COLLECT=1 python -m pip_app.server
+```
+
+| 能力 | 说明 |
+|:--|:--|
+| `/healthz` | 探针，数据为空返回 503 |
+| `/metrics` | Prometheus 文本（请求数 / 耗时 / 条目数 / 覆盖区域） |
+| `/api/world` | 全球覆盖扫描 |
+| gzip | >1 KB 且客户端支持时自动压缩 |
+| 缓存 | HTML/API `no-store`，截图 `max-age=86400` |
+| 日志 | 每行 JSON，含 path / status / ms |
+| 优雅关闭 | SIGTERM / SIGINT |
+| 定时采集 | `PIP_AUTO_COLLECT=1`，间隔 `PIP_COLLECT_INTERVAL` |
+
+镜像与编排：`Dockerfile`、`docker-compose.yml`、`deploy/pip.service`。完整步骤见 **[DEPLOY.md](../DEPLOY.md)**。
+
+## 全球覆盖扫描
+
+`pip_app/world_scan.py` 把 31 个源按大洲聚合，回答「情报覆盖是不是真的全球化」：
+
+| 区域 | 源 | 今日条目 | 状态 |
+|:--|--:|--:|:--|
+| 北美 | 20 | 376 | 已覆盖 |
+| 西欧 | 6 | 73 | 已覆盖 |
+| 东亚 | 4 | 75 | 已覆盖 |
+| 中东 | 1 | 0 | 薄弱 |
+| 南亚 / 东南亚 / 大洋洲 / 拉美 / 非洲 / 东欧与俄 | 0 | 0 | **盲区** |
+
+**全球覆盖率 40%**（4/10 区域，7 国）。这个数字比「31 个源」诚实得多——说明当前情报网本质是北美 + 西欧 + 东亚视角。
+
+页面上是「世界」标签（或 `#world` 直达），API 是 `/api/world`。国家归属取编辑部所在城市（`build_globe_data.SOURCE_PLACE`）。
