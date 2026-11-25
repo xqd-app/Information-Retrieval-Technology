@@ -386,3 +386,24 @@ PIP_HOST=0.0.0.0 PIP_PORT=8080 PIP_AUTO_COLLECT=1 python -m pip_app.server
 **全球覆盖率 40%**（4/10 区域，7 国）。这个数字比「31 个源」诚实得多——说明当前情报网本质是北美 + 西欧 + 东亚视角。
 
 页面上是「世界」标签（或 `#world` 直达），API 是 `/api/world`。国家归属取编辑部所在城市（`build_globe_data.SOURCE_PLACE`）。
+
+### 补盲：40% → 100%
+
+第一版覆盖率 40%（4/10 区域），6 个盲区一个源都没有。逐个探测候选源（两轮共 39 个 URL，只留能解析出条目的），补入 **22 个**：
+
+| 区域 | 新增来源 | 结果 |
+|:--|:--|:--|
+| 南亚 | The Hindu、Times of India、Dawn | 3 源 / 88 条 |
+| 拉美 | G1 Globo、La Nación、Clarín | 3 源 / 87 条 |
+| 非洲 | Premium Times、Africanews、The Standard Kenya | 3 源 / 85 条 |
+| 大洋洲 | The Guardian Australia、RNZ、SBS News | 3 源 / 66 条 |
+| 东南亚 | Straits Times、CNA、Bangkok Post、VnExpress、Rappler | 5 源 / 117 条 |
+| 东欧与俄 | Kyiv Post、Balkan Insight、Notes from Poland | 3 源 / 91 条 |
+| 中东 | The Times of Israel（原有 Al Jazeera） | 2 源 / 40 条（仍薄弱） |
+| 西欧 | El País América（编辑部马德里） | 7 源 / 189 条 |
+
+**当前：10/10 区域、25 国、53 源、1,413 条，盲区 0。**
+
+探测中被淘汰的典型：Folha/Infobae/Arab News/Jordan Times 返回 403，Bangkok 以外的 `gulfnews`/`khaleejtimes` 404，`rferl` 能解析但 0 条，`tehrantimes` 标题字段错位。规则是**能解析出条目才算接**，不为了凑数硬加。
+
+中东仍标 `thin`（2 源）——`gulfnews`/`khaleejtimes`/`arabnews` 都拒绝访问，本地源普遍反爬，这一块没能做实，页面如实显示琥珀色而不是伪装成已覆盖。

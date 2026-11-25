@@ -31,8 +31,8 @@ REGIONS: dict[str, list[str]] = {
     "东南亚": ["SG", "ID", "MY", "TH", "VN", "PH"],
     "大洋洲": ["AU", "NZ"],
     "拉美": ["BR", "AR", "CL", "CO", "PE", "VE"],
-    "非洲": ["ZA", "NG", "KE", "EG", "MA"],
-    "东欧与俄": ["RU", "PL", "CZ", "UA", "HU", "RO"],
+    "非洲": ["ZA", "NG", "KE", "EG", "MA", "CG"],
+    "东欧与俄": ["RU", "PL", "CZ", "UA", "HU", "RO", "RS"],
 }
 
 COUNTRY_NAMES = {
@@ -48,6 +48,7 @@ COUNTRY_NAMES = {
     "BR": "巴西", "AR": "阿根廷", "CL": "智利", "CO": "哥伦比亚", "PE": "秘鲁", "VE": "委内瑞拉",
     "ZA": "南非", "NG": "尼日利亚", "KE": "肯尼亚", "EG": "埃及", "MA": "摩洛哥",
     "RU": "俄罗斯", "PL": "波兰", "CZ": "捷克", "UA": "乌克兰", "HU": "匈牙利", "RO": "罗马尼亚",
+    "RS": "塞尔维亚", "CG": "刚果（布）", "ES": "西班牙", "PT": "葡萄牙",
 }
 
 STATUS_FULL = "covered"      # >= 3 个源

@@ -250,6 +250,182 @@
       "lang": "en",
       "url": "https://github.blog/changelog/feed/",
       "tier": 2
+    },
+    {
+      "id": "hindu-world",
+      "name": "The Hindu · World",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.thehindu.com/news/international/feeder/default.rss",
+      "tier": 2
+    },
+    {
+      "id": "toi-world",
+      "name": "Times of India · World",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
+      "tier": 2
+    },
+    {
+      "id": "dawn-world",
+      "name": "Dawn · World",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.dawn.com/feeds/home",
+      "tier": 2
+    },
+    {
+      "id": "g1-world",
+      "name": "G1 Globo",
+      "domain": "geopol",
+      "lang": "pt",
+      "url": "https://g1.globo.com/rss/g1/",
+      "tier": 2
+    },
+    {
+      "id": "lanacion",
+      "name": "La Nación",
+      "domain": "geopol",
+      "lang": "es",
+      "url": "https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml",
+      "tier": 2
+    },
+    {
+      "id": "clarin",
+      "name": "Clarín",
+      "domain": "geopol",
+      "lang": "es",
+      "url": "https://www.clarin.com/rss/lo-ultimo/",
+      "tier": 3
+    },
+    {
+      "id": "premium-times",
+      "name": "Premium Times",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.premiumtimesng.com/feed",
+      "tier": 2
+    },
+    {
+      "id": "africanews",
+      "name": "Africanews",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.africanews.com/feed/rss",
+      "tier": 2
+    },
+    {
+      "id": "standard-ke",
+      "name": "The Standard Kenya",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.standardmedia.co.ke/rss/headlines.php",
+      "tier": 3
+    },
+    {
+      "id": "guardian-au",
+      "name": "The Guardian Australia",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.theguardian.com/au/rss",
+      "tier": 2
+    },
+    {
+      "id": "rnz-world",
+      "name": "RNZ · World",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.rnz.co.nz/rss/world.xml",
+      "tier": 3
+    },
+    {
+      "id": "sbs-news",
+      "name": "SBS News",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.sbs.com.au/news/feed",
+      "tier": 3
+    },
+    {
+      "id": "straitstimes-world",
+      "name": "The Straits Times · World",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.straitstimes.com/news/world/rss.xml",
+      "tier": 2
+    },
+    {
+      "id": "cna-asia",
+      "name": "CNA · Asia",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml",
+      "tier": 2
+    },
+    {
+      "id": "bangkokpost",
+      "name": "Bangkok Post",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.bangkokpost.com/rss/data/topstories.xml",
+      "tier": 3
+    },
+    {
+      "id": "vnexpress",
+      "name": "VnExpress",
+      "domain": "geopol",
+      "lang": "vi",
+      "url": "https://vnexpress.net/rss/tin-moi-nhat.rss",
+      "tier": 3
+    },
+    {
+      "id": "rappler",
+      "name": "Rappler",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.rappler.com/feed/",
+      "tier": 3
+    },
+    {
+      "id": "notesfrompoland",
+      "name": "Notes from Poland",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://notesfrompoland.com/feed/",
+      "tier": 3
+    },
+    {
+      "id": "kyivpost",
+      "name": "Kyiv Post",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.kyivpost.com/feed",
+      "tier": 2
+    },
+    {
+      "id": "balkaninsight",
+      "name": "Balkan Insight",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://balkaninsight.com/feed/",
+      "tier": 3
+    },
+    {
+      "id": "elpais-america",
+      "name": "El País América",
+      "domain": "geopol",
+      "lang": "es",
+      "url": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america/portada",
+      "tier": 2
+    },
+    {
+      "id": "timesofisrael",
+      "name": "The Times of Israel",
+      "domain": "geopol",
+      "lang": "en",
+      "url": "https://www.timesofisrael.com/feed/",
+      "tier": 2
     }
   ]
 }
