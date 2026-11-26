@@ -92,6 +92,48 @@ def bootstrap_db() -> None:
         print(f"[bootstrap] db skipped: {type(exc).__name__}: {exc}", flush=True)
 
 
+def sync_origin() -> None:
+    """让「采集端」跟随当前机器的出口位置。
+
+    为什么需要：
+        globe.json 与 index.html 都是构建产物，origin 会被一起固化。
+        把项目部署到德国服务器后，页面上仍显示构建机的位置（比如 Tokyo），
+        与实际执行采集的机器不符。这里在启动时重新检测出口 IP，
+        位置变了就按新位置重算地球与页面。
+    """
+    if os.environ.get("PIP_AUTO_ORIGIN", "1") != "1":
+        return
+    try:
+        from pip_app.tools import detect_location
+
+        previous = detect_location.load_cache(ttl=10 ** 9)  # 忽略 TTL，只读旧值做比较
+        info = detect_location.detect(force=True)           # 强制重新测当前出口
+        if not info:
+            print("[origin] 检测失败，沿用现有位置", flush=True)
+            return
+        print(
+            f"[origin] 本机出口：{info.get('city')} ({info.get('lat')}, {info.get('lon')}) "
+            f"via {info.get('source')} ip={info.get('ip')}",
+            flush=True,
+        )
+        same = (
+            previous
+            and previous.get("city") == info.get("city")
+            and round(float(previous.get("lat", 0)), 3) == round(float(info["lat"]), 3)
+        )
+        if same:
+            print("[origin] 位置未变，跳过重建", flush=True)
+            return
+
+        from pip_app.tools import build_globe_data, build_web
+
+        build_globe_data.main()
+        build_web.build()
+        print("[origin] 已按当前机器位置重建地球与页面", flush=True)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[origin] 同步失败（沿用现有数据）：{type(exc).__name__}: {exc}", flush=True)
+
+
 def main() -> None:
     ensure_code()
 
@@ -112,6 +154,7 @@ def main() -> None:
 
     print(f"[boot] PIP starting on 0.0.0.0:{port}  (cwd={os.getcwd()})", flush=True)
     bootstrap_db()
+    sync_origin()
 
     from pip_app.server import main as serve
 
