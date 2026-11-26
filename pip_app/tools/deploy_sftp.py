@@ -30,7 +30,7 @@ HOST = os.environ.get("PIP_SSH_HOST", "de3.nodaroo.fun")
 PORT = int(os.environ.get("PIP_SSH_PORT", "2022"))
 USER = os.environ.get("PIP_SSH_USER", "free_1564394058917482544.27cfb8f4")
 PASSWORD = os.environ.get("PIP_SSH_PASSWORD", "")
-KEY = os.environ.get("PIP_SSH_KEY", "")
+KEY = os.environ.get("PIP_SSH_KEY", str(Path.home() / ".ssh" / "pip_deploy"))
 REMOTE_DIR = os.environ.get("PIP_REMOTE_DIR", "pip")
 
 SETUP = """
