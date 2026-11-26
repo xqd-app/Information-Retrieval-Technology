@@ -26,10 +26,12 @@ import json
 import logging
 import os
 import signal
+import subprocess
 import sys
 import threading
 import time
 from collections import Counter
+from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -174,6 +176,42 @@ def client_key(handler) -> str:
     if fwd:
         return fwd.split(",")[0].strip()
     return handler.client_address[0] if handler.client_address else "unknown"
+
+
+def code_version() -> dict:
+    """返回线上代码的来源：是否 git 管理、哪个提交、关键文件时间。
+
+    判断「是否会自动更新」的依据就是这两个字段：
+        git=false            → 解压/上传的文件，git pull 永远不会执行
+        git=true + commit=A  → 面板 AUTO_UPDATE=1 时重启即拉到最新
+    """
+    root = Path(__file__).resolve().parent.parent
+    has_git = (root / ".git").exists()
+    info: dict = {"git": has_git, "commit": None, "branch": None, "files": {}}
+
+    if has_git:
+        for key, args in (("commit", ["rev-parse", "--short", "HEAD"]),
+                          ("branch", ["rev-parse", "--abbrev-ref", "HEAD"])):
+            try:
+                result = subprocess.run(
+                    ["git", "-C", str(root), *args],
+                    capture_output=True, text=True, timeout=5,
+                )
+                if result.returncode == 0:
+                    info[key] = result.stdout.strip()
+            except (OSError, subprocess.SubprocessError):
+                pass
+
+    for rel in ("pip_app/web/index.html", "pip_app/web/login.html", "pip_app/server.py"):
+        path = root / rel
+        try:
+            info["files"][rel] = datetime.fromtimestamp(
+                path.stat().st_mtime, tz=timezone.utc
+            ).strftime("%Y-%m-%dT%H:%M:%SZ") if path.exists() else None
+        except OSError:
+            info["files"][rel] = None
+
+    return info
 
 
 def db_path() -> Path:
@@ -415,6 +453,7 @@ class Handler(BaseHTTPRequestHandler):
             "sources": len({i.get("source_id") for i in items if i.get("source_id")}),
             "uptime_s": round(time.time() - START_TIME),
             "db": {"path": str(db_path()), "available": db_available(), **counts},
+            "code": code_version(),
         }
         self._json(200 if ok else 503, payload)
         METRICS.set("pip_items", len(items))
