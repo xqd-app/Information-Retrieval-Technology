@@ -426,6 +426,46 @@
       "lang": "en",
       "url": "https://www.timesofisrael.com/feed/",
       "tier": 2
+    },
+    {
+      "id": "zaelix-ai-coding",
+      "name": "Zaelix · AI 编程",
+      "domain": "ai",
+      "lang": "zh",
+      "url": "https://zaelix.tech/category/ai-coding/feed/",
+      "tier": 3
+    },
+    {
+      "id": "zaelix-ai-news",
+      "name": "Zaelix · AI 动态",
+      "domain": "ai",
+      "lang": "zh",
+      "url": "https://zaelix.tech/category/ai-news/feed/",
+      "tier": 3
+    },
+    {
+      "id": "zaelix-codex",
+      "name": "Zaelix · Codex",
+      "domain": "ai",
+      "lang": "zh",
+      "url": "https://zaelix.tech/category/codex/feed/",
+      "tier": 3
+    },
+    {
+      "id": "zaelix-claude-code",
+      "name": "Zaelix · Claude Code",
+      "domain": "ai",
+      "lang": "zh",
+      "url": "https://zaelix.tech/category/claude-code/feed/",
+      "tier": 3
+    },
+    {
+      "id": "zaelix-resources",
+      "name": "Zaelix · 资源",
+      "domain": "skills",
+      "lang": "zh",
+      "url": "https://zaelix.tech/category/resources/feed/",
+      "tier": 3
     }
   ]
 }

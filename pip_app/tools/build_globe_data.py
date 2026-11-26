@@ -111,6 +111,11 @@ SOURCE_PLACE = {
     "qbitai": ("Beijing", "city"),
     "infoq-cn": ("Beijing", "city"),
     "timesofisrael": ("Jerusalem", "hq"),
+    "zaelix-ai-coding": ("Hong Kong", "approx"),   # Cloudflare 后端，位置近似
+    "zaelix-ai-news": ("Hong Kong", "approx"),   # Cloudflare 后端，位置近似
+    "zaelix-codex": ("Hong Kong", "approx"),   # Cloudflare 后端，位置近似
+    "zaelix-claude-code": ("Hong Kong", "approx"),   # Cloudflare 后端，位置近似
+    "zaelix-resources": ("Hong Kong", "approx"),   # Cloudflare 后端，位置近似
     "hindu-world": ("Chennai", "hq"),
     "toi-world": ("Mumbai", "hq"),
     "dawn-world": ("Karachi", "hq"),
