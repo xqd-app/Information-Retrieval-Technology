@@ -198,3 +198,32 @@ python -m pip_app.tools.build_globe_data && python -m pip_app.tools.build_web
 - 响应带 `X-Content-Type-Options: nosniff`
 - 无写接口、无登录、无数据库连接——只读服务
 - systemd unit 启用 `ProtectSystem=strict` / `NoNewPrivileges` / `PrivateTmp`
+
+---
+
+## 9. 数据库
+
+服务使用 SQLite（`pip_app/data/pip.db`），无需额外装数据库服务。
+
+```bash
+# 首次
+python -m pip_app.cli db init
+python -m pip_app.cli db sync --days 7
+
+# 采集后会自动 sync，无需手动
+python -m pip_app.cli collect
+```
+
+| 环境变量 | 默认 | 说明 |
+|:--|:--|:--|
+| `PIP_DB` | `pip_app/data/pip.db` | 数据库路径 |
+
+**备份**：WAL 模式下要一起备三个文件。
+
+```bash
+sqlite3 pip_app/data/pip.db ".backup '/backup/pip-$(date +%F).db'"
+```
+
+**Docker**：`pip.db` 落在挂载目录 `./pip_app/data`，容器重建不丢。
+
+**库不存在时**：`/api/v1/*` 自动回落 JSONL，页面与旧接口不受影响——所以可以先跑服务再补库。

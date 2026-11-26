@@ -407,3 +407,60 @@ PIP_HOST=0.0.0.0 PIP_PORT=8080 PIP_AUTO_COLLECT=1 python -m pip_app.server
 探测中被淘汰的典型：Folha/Infobae/Arab News/Jordan Times 返回 403，Bangkok 以外的 `gulfnews`/`khaleejtimes` 404，`rferl` 能解析但 0 条，`tehrantimes` 标题字段错位。规则是**能解析出条目才算接**，不为了凑数硬加。
 
 中东仍标 `thin`（2 源）——`gulfnews`/`khaleejtimes`/`arabnews` 都拒绝访问，本地源普遍反爬，这一块没能做实，页面如实显示琥珀色而不是伪装成已覆盖。
+
+---
+
+## 数据库（SQLite）
+
+### 为什么是 SQLite
+
+标准库自带、零依赖、单文件、FTS5 带 trigram 分词（中文可子串检索）。这个项目万级/天的量离它的上限很远，真要换 PostgreSQL 也只需替换 `db.connect()`。
+
+### 表
+
+| 表 | 用途 | 关键约束 |
+|:--|:--|:--|
+| `sources` | 源元数据（域/语言/国家/城市/tier） | `id` 主键 |
+| `items` | 条目 | `url` **唯一**（幂等写入靠它） |
+| `items_fts` | FTS5 全文索引（title + summary） | 触发器自动同步 |
+| `source_runs` | 每次采集结果 | 供健康报表聚合 |
+| `schema_meta` | 版本号 | 迁移用 |
+
+索引：`published_at` / `source_id` / `day` / `domain` / `time_confidence`。
+
+### 命令
+
+```bash
+python -m pip_app.cli db init     # 建库
+python -m pip_app.cli db sync     # JSONL → DB（幂等，采集后自动跑）
+python -m pip_app.cli db stats    # 统计
+python -m pip_app.cli search 大模型 -n 10   # 命令行全文检索
+```
+
+实测输出：
+
+```
+条目 1771 · 源 53 · 域 {'geopol': 1101, 'ai': 506, 'skills': 138, 'oss': 26}
+语言 {'en': 1441, 'zh': 163, 'es': 87, 'vi': 40, 'pt': 40}
+可信度 {'high': 1660, 'low': 111}
+最活跃源：IT之家（127 条）
+```
+
+### v1 API（数据库驱动）
+
+| 接口 | 说明 |
+|:--|:--|
+| `GET /api/v1/items?q=&domain=&lang=&conf=&source=&day=&sort=&page=&size=` | 分页查询 + FTS5 全文检索 |
+| `GET /api/v1/stats` | 总量 / 域 / 语言 / 可信度 / 时间范围 |
+| `GET /api/v1/sources` | 每个源及其条目数（含国家、城市） |
+| `GET /api/v1/days` | 按采集日聚合 |
+| `GET /api/v1/health` | 从 `source_runs` 聚合的成功率 |
+
+响应带 `source: "db" | "jsonl"`，一眼能看出走的是哪条路。**库不存在时自动回落 JSONL**，不会 500。
+
+```bash
+curl "localhost:8080/api/v1/items?q=AI&size=2" | jq '{total, page, pages, source}'
+# {"total":878,"page":1,"pages":439,"source":"db"}
+```
+
+搜索实现：`>=3` 字符走 FTS5（trigram，中英文都行），`<3` 字符自动退回 `LIKE`，因为 trigram 有最短长度限制。
