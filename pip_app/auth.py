@@ -38,26 +38,19 @@ def _hash(password: str, salt: bytes) -> bytes:
     return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, PBKDF2_ROUNDS)
 
 
+DEFAULT_PASSWORD = "pip2026"
+
+
 def _load_or_create_password() -> tuple[str, bool]:
-    """返回 (密码, 是否为新生成)。环境变量优先。"""
+    """返回 (密码, 是否用的是默认值)。
+
+    优先级：PIP_PASSWORD 环境变量 > 固定默认值。
+    刻意不再随机生成——随机值只在启动日志里出现一次，重装/清库后就找不到了。
+    """
     env_pwd = os.environ.get("PIP_PASSWORD")
     if env_pwd:
         return env_pwd, False
-    if PASSWORD_FILE.exists():
-        pwd = PASSWORD_FILE.read_text(encoding="utf-8").strip()
-        if pwd:
-            return pwd, False
-    pwd = secrets.token_urlsafe(12)
-    try:
-        PASSWORD_FILE.parent.mkdir(parents=True, exist_ok=True)
-        PASSWORD_FILE.write_text(pwd + "\n", encoding="utf-8")
-        try:
-            PASSWORD_FILE.chmod(0o600)
-        except OSError:
-            pass
-    except OSError:
-        pass
-    return pwd, True
+    return DEFAULT_PASSWORD, True
 
 
 _PASSWORD, _GENERATED = _load_or_create_password()
@@ -67,7 +60,10 @@ _PASSWORD_HASH = _hash(_PASSWORD, _SALT)
 
 def generated_password_notice() -> str:
     if _GENERATED:
-        return f"[auth] 已生成初始密码：{_PASSWORD}（可改环境变量 PIP_PASSWORD 覆盖）"
+        return (
+            f"[auth] 默认密码：{_PASSWORD}  用户名：{USERNAME}\n"
+            f"[auth] 生产环境请设置环境变量 PIP_PASSWORD 覆盖它"
+        )
     return ""
 
 

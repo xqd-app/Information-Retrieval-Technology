@@ -144,17 +144,37 @@ class CookieTest(unittest.TestCase):
         self.assertIn("Max-Age=0", header)
 
 
-class GeneratedPasswordTest(unittest.TestCase):
-    def test_notice_when_generated(self):
-        """没配 PIP_PASSWORD 时应提示初始密码（避免静默空密码）。"""
+class DefaultPasswordTest(unittest.TestCase):
+    """没配 PIP_PASSWORD 时用固定默认密码，而不是随机值。"""
+
+    def setUp(self):
         os.environ.pop("PIP_PASSWORD", None)
         os.environ["PIP_USER"] = "admin"
         import pip_app.auth as auth
 
-        reloaded = importlib.reload(auth)
-        self.assertTrue(reloaded.verify("admin", reloaded._PASSWORD))
+        self.auth = importlib.reload(auth)
+
+    def tearDown(self):
         os.environ["PIP_PASSWORD"] = "test-secret-123"
-        importlib.reload(auth)
+        importlib.reload(self.auth)
+
+    def test_default_password_is_fixed(self):
+        self.assertEqual(self.auth.DEFAULT_PASSWORD, "pip2026")
+
+    def test_default_password_works(self):
+        self.assertTrue(self.auth.verify("admin", "pip2026"))
+
+    def test_notice_mentions_default(self):
+        notice = self.auth.generated_password_notice()
+        self.assertIn("pip2026", notice)
+        self.assertIn("PIP_PASSWORD", notice)
+
+    def test_env_overrides_default(self):
+        os.environ["PIP_PASSWORD"] = "my-own-pass"
+        reloaded = importlib.reload(self.auth)
+        self.assertTrue(reloaded.verify("admin", "my-own-pass"))
+        self.assertFalse(reloaded.verify("admin", "pip2026"))
+        self.assertEqual(reloaded.generated_password_notice(), "")
 
 
 if __name__ == "__main__":
