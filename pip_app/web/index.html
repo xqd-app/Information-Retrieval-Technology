@@ -100,7 +100,7 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
   background:linear-gradient(180deg,var(--cy),rgba(34,211,238,0));box-shadow:0 0 12px rgba(34,211,238,.8)}
 .lede b{font-family:var(--num);font-weight:700;color:var(--cy-b);font-size:14px;text-shadow:0 0 14px rgba(34,211,238,.5)}
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}
 .stat{position:relative;padding:12px 12px 10px;text-align:center;
   background:linear-gradient(180deg, rgba(10,40,64,.92), rgba(4,16,28,.95));
   border:1px solid var(--line);
@@ -135,7 +135,7 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
   box-shadow:0 0 10px #4ade80;animation:blink 2.4s ease-in-out infinite}
 
 .globe-stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:520px}
-.globe-stage canvas{width:min(100%,860px);height:auto;display:block;cursor:grab;touch-action:none}
+.globe-stage canvas{width:100%;max-width:min(100%,860px);max-height:90vh;height:auto;display:block;cursor:grab;touch-action:none}
 .globe-stage canvas:active{cursor:grabbing}
 .globe-caption{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);
   display:inline-flex;align-items:center;gap:14px;padding:7px 22px;
@@ -207,7 +207,7 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
   -webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
 .sum.open{-webkit-line-clamp:unset;display:block}
 
-.dist-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dist-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 .dcard{position:relative;padding:16px 18px 18px;background:linear-gradient(160deg, rgba(8,30,50,.9), rgba(3,12,22,.94));
   border:1px solid var(--line-2);
   clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
@@ -255,7 +255,7 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
 .wring span{position:relative;z-index:1;font-family:var(--num);font-size:24px;font-weight:700;color:#eafcff;
   text-shadow:0 0 16px rgba(34,211,238,.6)}
 .wring span i{font-style:normal;font-size:11px;color:var(--cy);margin-left:1px}
-.wstats{display:grid;grid-template-columns:repeat(2,minmax(82px,1fr));gap:8px 20px}
+.wstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px}
 .wstats div{display:flex;flex-direction:column}
 .wstats b{font-family:var(--num);font-size:17px;color:#dff6ff}
 .wstats span{font-size:9.5px;letter-spacing:1.2px;color:var(--dim)}
@@ -283,23 +283,77 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
   .globe-stage canvas{width:min(100%,700px)}
 }
 @media (max-width:1080px){
-  .hero{grid-template-columns:1fr;min-height:auto;padding:64px 16px 90px;gap:16px}
+  .hero{grid-template-columns:1fr;min-height:auto;padding:64px 16px 90px;gap:16px;
+    width:100%;max-width:100%;min-width:0}
+  .panel,.globe-stage,.tabs{min-width:0;max-width:100%}
+  .globe-stage canvas{min-width:0;width:100%!important;max-width:100%!important}
   .panel{order:1}
   .globe-stage{order:2;min-height:400px}
   .brand,.sub{padding-left:96px}
   .hacker-out{width:120px;height:152px;left:14px;top:18px}
-  .tabs{position:static;margin-top:6px}
+  .tabs{position:static;margin-top:10px;align-self:flex-start}
   .dist-grid{grid-template-columns:1fr}
   .panel-list{padding:0 16px 60px}
   .hud-system{display:none}
 }
 @media (max-width:760px){
-  .brand h1{font-size:26px;letter-spacing:2px}
-  .brand,.sub{padding-left:0}
+  /* 兜底：任何子项都不许按内容固有宽度撑开容器 */
+  html,body{max-width:100vw;overflow-x:hidden}
+  .hero,.panel,.panel-inner,.panel-list,.list,.filters,.stats,.nav,.actions,
+  .list-head,.meta,.dist-grid,.wgrid,.hgrid,.globe-stage{min-width:0;max-width:100%}
+  .hero > *, .stats > *, .filters > *, .nav > *, .actions > *{min-width:0}
+  .hero{padding:16px 12px 96px;gap:8px}
+  .panel-inner{padding:16px 14px 16px}
+  .brand{padding-left:0;min-height:0;margin-bottom:6px}
+  .brand h1{font-size:24px;letter-spacing:1px}
+  .sub{padding-left:0;font-size:9px;letter-spacing:1.4px;margin-bottom:12px}
   .hacker-out{display:none}
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .stat b{font-size:26px}
-  .globe-stage{min-height:300px}
+  .nav{gap:2px 10px;padding-bottom:10px;margin-bottom:12px}
+  .nav a{font-size:12.5px;padding:4px 6px;gap:5px}
+  .nav a svg{width:13px;height:13px}
+  .lede{font-size:13.5px;line-height:1.65;margin-bottom:14px;padding-left:10px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+  .stat{padding:9px 8px 8px}
+  .stat .ico{font-size:8px;letter-spacing:.8px}
+  .stat b{font-size:24px}
+  .stat span{font-size:9px;letter-spacing:1.2px}
+  .actions{gap:12px}
+  .btn{padding:9px 18px 9px 14px;font-size:13px;letter-spacing:1px}
+  .updated{font-size:9.5px;letter-spacing:.6px;margin-top:12px;padding-top:10px}
+  .globe-stage{min-height:auto;padding:6px 0 0;flex-direction:column;gap:6px}
+  .globe-stage canvas{width:100%!important;max-width:100%!important}
+  .globe-legend{position:static;text-align:left;margin:4px 0 0;font-size:8.5px}
+  .globe-caption{position:static;transform:none;margin:8px auto 0;font-size:9px;padding:5px 12px;gap:8px}
+  .tabs{position:fixed;left:10px;right:10px;bottom:10px;max-width:calc(100vw - 20px);
+    justify-content:space-between;
+    background:rgba(4,16,28,.96);box-shadow:0 6px 24px rgba(0,0,0,.7)}
+  .tab{flex:1;padding:9px 0;font-size:12px;letter-spacing:.6px}
+  .panel-list{padding:0 12px 104px}
+  .list-head h2{font-size:18px;letter-spacing:1.4px}
+  .list-head span{font-size:9px;letter-spacing:.6px}
+  .filters{gap:6px;padding:10px 0}
+  .fchip{font-size:11px;padding:4px 9px}
+  .filters input{min-width:0;width:100%;order:9}
+  .filters select{max-width:none!important;flex:1}
+  .item{padding:11px 12px}
+  .item h3{font-size:15px;line-height:1.4}
+  .meta{font-size:9px;gap:6px;margin:6px 0}
+  .tag{font-size:8.5px;padding:1px 5px}
+  .src{font-size:10.5px}
+  .sum{font-size:12px;line-height:1.55}
+  .dist-grid,.wgrid{grid-template-columns:minmax(0,1fr)}
+  .wcover{gap:16px}
+  .wring{width:80px;height:80px}
+  .wring span{font-size:20px}
+  .wstats{grid-template-columns:repeat(2,1fr);gap:6px 14px}
+  .hgrid{grid-template-columns:minmax(0,1fr)}
+  .nav{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .panel,.panel-inner{overflow-x:clip}
+  .bars{height:140px;gap:6px}
+  .bar .cc{font-size:7.5px;letter-spacing:0}
+  .hud-system{display:none}
+  .foot{font-size:8.5px;letter-spacing:1px;padding:8px 12px 90px}
 }
 </style>
 </head>
@@ -359,7 +413,7 @@ body{margin:0;min-height:100%;color:var(--text);font-family:var(--sans);font-siz
   </div>
 
   <div class="globe-stage">
-    <canvas id="globe" width="880" height="880" aria-label="情报来源与采集端的三维投影"></canvas>
+    <canvas id="globe" aria-label="情报来源与采集端的三维投影"></canvas>
     <div class="globe-legend" id="globe-legend"></div>
     <div class="globe-caption"><i>&#8249;&#8249;&#8249;</i><span id="globe-caption-text">LOADING</span><i>&#8250;&#8250;&#8250;</i></div>
   </div>
@@ -462,9 +516,13 @@ function renderGlobe(){
   const cv = $("globe");
   if(!cv || !cv.getContext) return;
   const ctx = cv.getContext("2d");
-  const SIZE = 880, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // 尺寸跟随容器：手机上不再被 880px 撑破布局
+  const stage = cv.parentElement;
+  const availW = stage ? Math.max(260, stage.clientWidth || window.innerWidth || 880) : 880;
+  const SIZE = Math.min(880, Math.round(availW));
   cv.width = SIZE * dpr; cv.height = SIZE * dpr;
-  cv.style.width = SIZE + "px"; cv.style.height = SIZE + "px";
+  cv.style.width = "100%"; cv.style.maxWidth = SIZE + "px"; cv.style.height = "auto";
   ctx.scale(dpr, dpr);
 
   const cx = SIZE / 2, cy = SIZE / 2 - 10, RAD = Math.PI / 180;
@@ -477,6 +535,7 @@ function renderGlobe(){
   const maxCount = Math.max(1, ...cities.map(c => c.count));
   const total = cities.reduce((s, c) => s + c.count, 0) || 1;
   const originCity = (G.origin && G.origin.city) || "";
+  const FS = SIZE < 520 ? 9 : 11.5;   // 小屏缩字号，避免标签糊在一起
   let lat0 = 24, lon0 = -55, spin = 0.045, dragging = false, lastX = 0, lastY = 0;
 
   const proj = (lat, lon, R) => {
@@ -620,7 +679,7 @@ function renderGlobe(){
 
       if(labelled.indexOf(c.city) < 0) return;
       const label = c.city + " " + c.count;
-      ctx.font = "11.5px 'Orbitron', ui-monospace, monospace";
+      ctx.font = FS + "px 'Orbitron', ui-monospace, monospace";
       const w = ctx.measureText(label).width + 14;
       const right = x < cx;
       const lx = right ? x + r + 8 : x - r - 8 - w;
@@ -651,7 +710,7 @@ function renderGlobe(){
         ctx.fillStyle = "#4ade80"; ctx.shadowColor = "#4ade80"; ctx.shadowBlur = 16; ctx.fill(); ctx.shadowBlur = 0;
 
         const label = "采集端 " + o.city;
-        ctx.font = "11px 'Orbitron', ui-monospace, monospace";
+        ctx.font = (FS - 0.5) + "px 'Orbitron', ui-monospace, monospace";
         const w = ctx.measureText(label).width + 14;
         const lx = ox - pulse - w - 4, ly = oy + 12;
         ctx.fillStyle = "rgba(6,24,40,.86)";
@@ -886,6 +945,13 @@ function bind(rows){
     if(e.key === "/" && document.activeElement !== $("q")){ e.preventDefault(); $("q").focus(); $("panel").scrollIntoView({behavior: "smooth"}); }
   });
 }
+
+/* 窗口尺寸变化（含手机旋转）时重建地球，debounce 避免抖动 */
+let __pipResizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(__pipResizeTimer);
+  __pipResizeTimer = setTimeout(() => renderGlobe(), 280);
+});
 
 const rows = DATA.items || [];
 initMatrix();
