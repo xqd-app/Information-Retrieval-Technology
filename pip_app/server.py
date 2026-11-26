@@ -151,6 +151,11 @@ def active_source_ids() -> set[str]:
 PUBLIC_PATHS = {"/login", "/api/login", "/healthz", "/metrics", "/favicon.ico"}
 
 
+def is_public_path(path: str) -> bool:
+    """登录页自身要加载的资源必须公开，否则会 302 到登录页死循环。"""
+    return path in PUBLIC_PATHS or path.startswith("/assets/")
+
+
 def session_token(handler) -> str | None:
     raw = handler.headers.get("Cookie") or ""
     for part in raw.split(";"):
@@ -280,7 +285,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/logout":
             return self._handle_logout()
 
-        if path not in PUBLIC_PATHS and not is_authenticated(self):
+        if not is_public_path(path) and not is_authenticated(self):
             if path.startswith("/api/"):
                 self._json(401, {"ok": False, "message": "未登录或会话已过期"})
                 return 401
@@ -322,6 +327,8 @@ class Handler(BaseHTTPRequestHandler):
             return 204
         if path.startswith(STATIC_PREFIX):
             return self._serve_static(path)
+        if path.startswith("/assets/"):
+            return self._serve_asset(path)
         self._error(404, "not found")
         return 404
 
@@ -502,6 +509,27 @@ class Handler(BaseHTTPRequestHandler):
     def _serve_health_v1(self) -> int:
         payload = with_db(repo.runs_summary)
         self._json(200, {"rows": payload or [], "source": "db" if payload is not None else "jsonl"})
+        return 200
+
+    def _serve_asset(self, path: str) -> int:
+        """web/assets 下的图片（登录页的兜帽贴图等）。"""
+        rel = path[len("/assets/"):]
+        if not rel or ".." in rel or rel.startswith(("/", "\\")):
+            self._error(400, "bad path")
+            return 400
+        base = (web_dir() / "assets").resolve()
+        target = (base / rel).resolve()
+        if base not in target.parents and target != base:
+            self._error(403, "forbidden")
+            return 403
+        if not target.exists() or target.is_dir():
+            self._error(404, "not found")
+            return 404
+        ctype = {
+            ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+            ".webp": "image/webp", ".svg": "image/svg+xml", ".ico": "image/x-icon",
+        }.get(target.suffix.lower(), "application/octet-stream")
+        self._send(200, target.read_bytes(), ctype, cache="public, max-age=86400")
         return 200
 
     def _serve_static(self, path: str) -> int:
