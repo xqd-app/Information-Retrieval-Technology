@@ -26,6 +26,7 @@ INCLUDE = [
     "packetvoyage-master/src",
     "deploy",
     "Dockerfile", "docker-compose.yml", "DEPLOY.md",
+    "app.py", "requirements.txt",
 ]
 
 # 数据里只带「重建页面必需」的，历史和截图都不传
