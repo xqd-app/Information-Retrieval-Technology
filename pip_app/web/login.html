@@ -376,7 +376,7 @@ document.getElementById('togglePassword').addEventListener('click', () => {
 });
 document.getElementById('forgot').addEventListener('click', e => {
   e.preventDefault();
-  showToast('请联系管理员：设置 PIP_PASSWORD 环境变量，或查看 data/.admin_password');
+  showToast('默认账号 admin / 密码 pip2026（未设置 PIP_PASSWORD 时有效；已改过则用你设置的值）');
 });
 document.querySelectorAll('[data-social]').forEach(btn => {
   btn.addEventListener('click', () => showToast(btn.dataset.social + ' 登录尚未配置'));
