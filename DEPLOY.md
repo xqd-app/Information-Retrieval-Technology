@@ -275,3 +275,35 @@ TOKEN=$(curl -s -c - -X POST localhost:8080/api/login \
 
 curl -H "Cookie: pip_session=$TOKEN" "localhost:8080/api/v1/items?q=AI&size=3"
 ```
+
+---
+
+## 11. 代码自动更新
+
+`app.py` 启动时会先尝试拉取最新代码（`sync_code()`），**这才是真正的自动更新**：
+
+```
+[boot] PIP starting on 0.0.0.0:26016
+[sync] 代码已更新 24aa684 → 2d60633      ← 拉到新提交
+[sync] 已是最新 (2d60633)                ← 没更新
+[sync] 非 git 目录（上传部署），跳过代码更新   ← 上传的文件
+[sync] git pull 未成功（继续用现有代码）：...  ← 网络问题，不影响启动
+```
+
+| 变量 | 默认 | 说明 |
+|:--|:--|:--|
+| `PIP_AUTO_UPDATE` | `1` | `0` 关闭启动时拉取 |
+
+三个设计点：
+
+1. **失败不阻塞** —— 拉取超时/冲突/断网都只是打印一行，服务照常启动
+2. **丢弃生成物改动** —— `globe.json`、`source_health.jsonl`、`index.html` 是被 git 跟踪的生成物，每次启动 `sync_origin` / 采集都会改写它们，不先 `git checkout --` 丢弃的话 `git pull` 必然因本地改动而失败
+3. **`--ff-only`** —— 只接受快进，避免在服务器上产生 merge 提交
+
+自查线上状态：`curl http://<host>:<port>/healthz | jq .code`
+
+```json
+{"git": true, "commit": "2d60633", "branch": "main", "files": {...}}
+```
+
+`git: false` 说明是上传部署，永远不会自动更新。

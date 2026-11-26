@@ -71,6 +71,68 @@ def ensure_code() -> None:
         print("[bootstrap] 仍无代码，可能网络不通；请检查容器能否访问 GitHub", flush=True)
 
 
+def _git(*args: str, timeout: int = 60) -> subprocess.CompletedProcess | None:
+    try:
+        return subprocess.run(
+            ["git", "-C", str(ROOT), *args],
+            capture_output=True, text=True, timeout=timeout,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def _git_rev() -> str:
+    result = _git("rev-parse", "--short", "HEAD", timeout=10)
+    return result.stdout.strip() if result and result.returncode == 0 else ""
+
+
+# 这些是被 git 跟踪的「生成物 / 运行期数据」：
+# 每次启动 sync_origin / 采集都会改写它们，导致 git pull 因本地改动而失败。
+# 拉取前先丢弃这些改动（都能重新生成，不算数据损失）。
+GENERATED_TRACKED = (
+    "pip_app/data/globe.json",
+    "pip_app/data/source_health.jsonl",
+    "pip_app/web/index.html",
+)
+
+
+def sync_code() -> None:
+    """每次启动先拉最新代码（仅当目录是 git 仓库时）。
+
+    真正的「自动更新」在这里，而不是面板的 AUTO_UPDATE
+    —— 面板那条只在有 .git 时触发，且我们这套自举方式拿不到 .git。
+    """
+    if os.environ.get("PIP_AUTO_UPDATE", "1") != "1":
+        print("[sync] PIP_AUTO_UPDATE=0，跳过代码更新", flush=True)
+        return
+    if not (ROOT / ".git").exists():
+        print("[sync] 非 git 目录（上传部署），跳过代码更新", flush=True)
+        return
+    if not shutil.which("git"):
+        print("[sync] 未找到 git 命令，跳过", flush=True)
+        return
+
+    before = _git_rev()
+    # 丢弃生成物的本地改动，避免 pull 被挡住
+    _git("checkout", "--", *GENERATED_TRACKED, timeout=30)
+
+    result = _git("pull", "--ff-only", timeout=120)
+    if result is None:
+        print("[sync] git pull 超时或无法执行，继续用现有代码", flush=True)
+        return
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "").strip().splitlines()
+        print(f"[sync] git pull 未成功（继续用现有代码）：{detail[-1] if detail else 'unknown'}",
+              flush=True)
+        return
+
+    after = _git_rev()
+    if before and after and before != after:
+        print(f"[sync] 代码已更新 {before} → {after}", flush=True)
+    else:
+        print(f"[sync] 已是最新 ({after or before or 'unknown'})", flush=True)
+
+
 def bootstrap_db() -> None:
     """首次启动建库并把仓库里的 JSONL 同步进去（幂等，失败不阻塞启动）。"""
     if os.environ.get("PIP_AUTO_DB", "1") != "1":
@@ -153,6 +215,7 @@ def main() -> None:
     os.environ.setdefault("PIP_LOG_LEVEL", "INFO")
 
     print(f"[boot] PIP starting on 0.0.0.0:{port}  (cwd={os.getcwd()})", flush=True)
+    sync_code()
     bootstrap_db()
     sync_origin()
 
