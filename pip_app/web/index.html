@@ -964,6 +964,36 @@ renderHealthCards();
 renderWorld();
 bind(rows);
 
+/* 采集端位置实时同步：每 5 分钟问一次后端，变了就重绘地球 */
+(function watchOrigin(){
+  const LABEL_INTERVAL = 5 * 60 * 1000;
+  let lastCity = (GLOBE && GLOBE.origin && GLOBE.origin.city) || "";
+
+  async function tick(first){
+    try{
+      const resp = await fetch("/api/origin" + (first ? "?refresh=1" : ""), {credentials: "same-origin"});
+      if(!resp.ok) return;
+      const data = await resp.json();
+      const o = data.origin || {};
+      if(!o.city) return;
+      if(o.city !== lastCity){
+        lastCity = o.city;
+        if(GLOBE) GLOBE.origin = {city: o.city, lat: o.lat, lon: o.lon,
+                                 source: o.source, ip: o.ip, detected_at: o.detected_at};
+        renderGlobe();
+        const legend = $("globe-legend");
+        if(legend){
+          const tag = String(o.source || "").indexOf("ip-detected") === 0 ? "AUTO IP" : "MANUAL";
+          legend.innerHTML = "NODE " + tag + "<br>" +
+            ((GLOBE && GLOBE.sources) || []).length + " SOURCE NODES";
+        }
+      }
+    }catch(e){ /* 离线或未登录，忽略 */ }
+  }
+  tick(true);
+  setInterval(() => tick(false), LABEL_INTERVAL);
+})();
+
 /* 支持 #world / #dist 直达视图，方便分享与截图 */
 (function initialView(){
   const view = (location.hash || "").replace("#", "");

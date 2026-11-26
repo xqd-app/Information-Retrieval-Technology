@@ -71,11 +71,16 @@ def ensure_code() -> None:
         print("[bootstrap] 仍无代码，可能网络不通；请检查容器能否访问 GitHub", flush=True)
 
 
-def _git(*args: str, timeout: int = 60) -> subprocess.CompletedProcess | None:
+def _git(*args: str, timeout: int = 20) -> subprocess.CompletedProcess | None:
+    env = dict(os.environ)
+    env.setdefault("GIT_TERMINAL_PROMPT", "0")     # 绝不弹交互式认证
+    env.setdefault("GIT_HTTP_LOW_SPEED_LIMIT", "1000")  # <1KB/s 持续 10s 即中断
+    env.setdefault("GIT_HTTP_LOW_SPEED_TIME", "10")
+    env.setdefault("GIT_ASKPASS", "echo")
     try:
         return subprocess.run(
             ["git", "-C", str(ROOT), *args],
-            capture_output=True, text=True, timeout=timeout,
+            capture_output=True, text=True, timeout=timeout, env=env,
         )
     except (OSError, subprocess.SubprocessError):
         return None
@@ -116,7 +121,7 @@ def sync_code() -> None:
     # 丢弃生成物的本地改动，避免 pull 被挡住
     _git("checkout", "--", *GENERATED_TRACKED, timeout=30)
 
-    result = _git("pull", "--ff-only", timeout=120)
+    result = _git("pull", "--ff-only", timeout=25)
     if result is None:
         print("[sync] git pull 超时或无法执行，继续用现有代码", flush=True)
         return

@@ -42,6 +42,7 @@ from . import config
 from .health_report import load_rows, summarize
 from . import auth
 from . import db as database
+from . import origin as origin_mod
 from . import repo
 from .serve import build_meta, filter_items
 from .world_scan import load_items as load_items_file
@@ -358,6 +359,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._serve_days_v1()
         if path == "/api/v1/health":
             return self._serve_health_v1()
+        if path == "/api/origin":
+            return self._serve_origin(query)
         if path == "/api/world":
             return self._serve_world()
         if path == "/favicon.ico":
@@ -478,6 +481,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def _serve_source_health(self) -> int:
         self._json(200, {"rows": read_health(active_source_ids())})
+        return 200
+
+    def _serve_origin(self, query) -> int:
+        """采集端当前位置。?refresh=1 立即重新检测（会打一次外部接口）。"""
+        refresh = (query.get("refresh") or ["0"])[0] == "1"
+        if refresh and origin_mod.auto_enabled():
+            result = origin_mod.sync(rebuild=False, force=True)
+            # 返回**刚检测到**的位置，而不是页面上的旧值
+            payload = {"origin": result.get("after") or origin_mod.current(), **result}
+        else:
+            payload = {"origin": origin_mod.current()}
+        self._json(200, payload)
         return 200
 
     def _serve_world(self) -> int:
@@ -612,6 +627,9 @@ def start_scheduler(interval: int) -> threading.Thread:
                 LOG.info("scheduled collect start")
                 cli_main(["collect"])
                 cli_main(["health"])
+                if origin_mod.auto_enabled():
+                    sync_result = origin_mod.sync(rebuild=True)
+                    LOG.info("origin sync after collect: %s", sync_result.get("reason"))
                 from .tools import build_globe_data, build_web  # type: ignore
 
                 build_globe_data.main()
