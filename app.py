@@ -55,8 +55,9 @@ def ensure_code() -> None:
             src = None
         if src and src.exists():
             for item in src.iterdir():
-                if item.name == ".git":
-                    continue  # 不复制 git 元数据，交给面板的 AUTO_UPDATE 处理
+                # 连 .git 一起复制：否则目录不是 git 仓库，
+                # 面板的 `if [[ -d .git ]]; then git pull` 永远不会执行，
+                # AUTO_UPDATE=1 就成了摆设。
                 target = ROOT / item.name
                 try:
                     if item.is_dir():
@@ -65,6 +66,8 @@ def ensure_code() -> None:
                         shutil.copy2(item, target)
                 except Exception as exc:  # noqa: BLE001
                     print(f"[bootstrap] 复制 {item.name} 失败：{exc}", flush=True)
+            if (ROOT / ".git").exists():
+                print("[bootstrap] 已复制 .git，后续可用 git pull 更新", flush=True)
         shutil.rmtree(tmp, ignore_errors=True)
 
     if not (ROOT / "pip_app" / "server.py").exists():
