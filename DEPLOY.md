@@ -227,3 +227,51 @@ sqlite3 pip_app/data/pip.db ".backup '/backup/pip-$(date +%F).db'"
 **Docker**：`pip.db` 落在挂载目录 `./pip_app/data`，容器重建不丢。
 
 **库不存在时**：`/api/v1/*` 自动回落 JSONL，页面与旧接口不受影响——所以可以先跑服务再补库。
+
+---
+
+## 10. 登录鉴权
+
+服务默认**不是**开放的：未登录访问 `/` 会 302 到 `/login`，`/api/*` 返回 401。
+
+| 路径 | 鉴权 |
+|:--|:--|
+| `/`、`/screens/*`、`/api/v1/*`、`/api/world` | 需要登录 |
+| `/login`、`/api/login` | 公开 |
+| `/healthz`、`/metrics` | 公开（给监控用） |
+
+### 设置密码
+
+```bash
+# 方式一：环境变量（推荐）
+PIP_USER=admin PIP_PASSWORD=你的密码 python -m pip_app.server
+
+# 方式二：不设密码，服务自动生成并打印在日志里
+#   [auth] 已生成初始密码：xxxxxxxx（可改环境变量 PIP_PASSWORD 覆盖）
+#   同时写入 data/.admin_password（权限 600）
+```
+
+| 变量 | 默认 | 说明 |
+|:--|:--|:--|
+| `PIP_USER` | `admin` | 用户名（比较时忽略大小写） |
+| `PIP_PASSWORD` | 自动生成 | 密码 |
+| `PIP_SESSION_TTL` | `86400` | 会话有效期（秒） |
+
+### 安全实现
+
+- 密码用 **PBKDF2-HMAC-SHA256（12 万轮 + 盐）** 派生后比较，不存明文
+- 比较用 `hmac.compare_digest`，防时序侧信道
+- 会话 token 为 `secrets.token_urlsafe(32)`，存在内存，服务重启即失效
+- Cookie 带 `HttpOnly` + `SameSite=Lax`
+- 同一 IP 连续失败 **5 次锁 5 分钟**（返回 429）
+- 退出：访问 `/logout`
+
+### 登录后如何调用 API
+
+```bash
+TOKEN=$(curl -s -c - -X POST localhost:8080/api/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"你的密码"}' | grep pip_session | awk '{print $7}')
+
+curl -H "Cookie: pip_session=$TOKEN" "localhost:8080/api/v1/items?q=AI&size=3"
+```

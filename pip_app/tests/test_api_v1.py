@@ -1,3 +1,4 @@
+import os
 """v1 API 的契约：分页、搜索、聚合、DB 回落。"""
 
 import json
@@ -13,6 +14,8 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "packetvoyage-master" / "src"))
 
 from pip_app import db, repo  # noqa: E402
+os.environ["PIP_USER"] = "admin"
+os.environ["PIP_PASSWORD"] = "test-secret-123"
 from pip_app.server import make_server  # noqa: E402
 
 
@@ -23,6 +26,13 @@ class ApiV1Case(unittest.TestCase):
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
         cls.base = f"http://127.0.0.1:{cls.port}"
+        payload = json.dumps({"username": "admin", "password": "test-secret-123"}).encode()
+        req = urllib.request.Request(
+            cls.base + "/api/login", data=payload,
+            headers={"Content-Type": "application/json"}, method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            cls.cookie = (resp.headers.get("Set-Cookie") or "").split(";")[0]
 
     @classmethod
     def tearDownClass(cls):
@@ -30,8 +40,9 @@ class ApiV1Case(unittest.TestCase):
         cls.server.server_close()
 
     def get(self, path):
+        req = urllib.request.Request(self.base + path, headers={"Cookie": self.cookie})
         try:
-            with urllib.request.urlopen(self.base + path, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=10) as resp:
                 return resp.status, json.loads(resp.read())
         except urllib.error.HTTPError as exc:
             return exc.code, json.loads(exc.read() or b"{}")

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIP 情报日报 · 登录</title>
+<style>
+:root{
+  --cyan:#00eaff;--blue:#168dff;--bg:#020a13;--panel:rgba(3,18,32,.88);
+  --line:rgba(0,220,255,.55);--muted:#7fa8bd;--white:#eafaff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:"Microsoft YaHei",Arial,sans-serif;background:var(--bg);color:var(--white)}
+body{min-height:100vh;overflow-x:hidden}
+#matrix{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.28;pointer-events:none}
+.page{position:relative;z-index:1;min-height:100vh;padding:28px 4.2vw 22px;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,224,255,.24);padding-bottom:18px}
+.brand{display:flex;align-items:center;gap:20px}
+.brand-mark{width:78px;height:78px;border:1px solid var(--cyan);border-radius:14px;display:grid;place-items:center;
+  color:var(--cyan);font-size:34px;text-shadow:0 0 18px var(--cyan);box-shadow:0 0 22px #00dfff22,inset 0 0 20px #00dfff18}
+.brand-title{font-size:clamp(28px,4vw,54px);font-weight:900;letter-spacing:2px}
+.brand-title span{color:var(--cyan);text-shadow:0 0 20px #00eaff77}
+.brand-sub{font-size:13px;letter-spacing:4px;color:#82b4cc;margin-top:4px}
+.status{border:1px solid #1b805e;background:#052219;color:#7dffba;padding:10px 17px;font-size:13px;letter-spacing:2px;box-shadow:0 0 18px #00ff7720}
+.status i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#30ff91;margin-right:9px;box-shadow:0 0 12px #30ff91}
+.main{flex:1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(380px,.9fr);align-items:center;gap:4vw;padding:36px 0}
+.hero{position:relative;min-height:570px;display:flex;flex-direction:column;justify-content:center;padding:20px 2vw}
+.hero-kicker{color:var(--cyan);letter-spacing:4px;font-size:13px;margin-bottom:14px}
+.hero h1{font-size:clamp(32px,4vw,58px);line-height:1.2;margin:0 0 16px;text-shadow:0 0 24px #00cfff55}
+.hero p{color:#a5c5d5;letter-spacing:1px;line-height:1.9;max-width:560px}
+.features{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.feature{border:1px solid #087b9b;background:#031a2a;padding:9px 14px;color:#b9f6ff;font-size:13px;clip-path:polygon(0 0,90% 0,100% 28%,100% 100%,0 100%)}
+.globe-wrap{position:relative;width:min(35vw,430px);aspect-ratio:1;margin:28px auto 0;display:grid;place-items:center}
+.globe{width:72%;height:72%;border-radius:50%;position:relative;overflow:hidden;
+ background:radial-gradient(circle at 35% 32%,#2bdbff 0,#0875a5 12%,#06365b 42%,#031426 72%);
+ border:1px solid #37eaff;box-shadow:0 0 35px #00cfff88,inset -25px -20px 50px #000b,inset 12px 10px 35px #6cefff66}
+.globe:before{content:"";position:absolute;inset:-5%;border-radius:50%;background:repeating-linear-gradient(0deg,transparent 0 17px,#48eaff65 18px 19px),repeating-linear-gradient(90deg,transparent 0 22px,#48eaff50 23px 24px);transform:rotate(-18deg);mask-image:radial-gradient(ellipse,black 48%,transparent 72%)}
+.globe:after{content:"";position:absolute;inset:12% 0;border:1px solid #62eaff88;border-radius:50%;transform:rotate(22deg) scaleX(.45);box-shadow:0 0 18px #00dfff55}
+.orbit{position:absolute;width:100%;height:38%;border:1px solid #00dfffaa;border-radius:50%;transform:rotate(-24deg);box-shadow:0 0 15px #00dfff33}
+.orbit.two{transform:rotate(48deg);width:110%;height:48%;border-color:#1a9bff88}
+.orbit:after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:#b8fbff;box-shadow:0 0 16px 5px #00dfff;top:10%;left:16%}
+.globe-caption{position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:3px;color:#56eaff;white-space:nowrap}
+.login-area{display:flex;justify-content:center}
+.login-card{width:min(100%,500px);padding:42px 42px 30px;position:relative;background:linear-gradient(145deg,rgba(4,28,47,.94),rgba(1,10,20,.96));
+ border:1px solid #00cde9;box-shadow:0 0 35px #00dfff24,inset 0 0 28px #00cfff12;clip-path:polygon(7% 0,93% 0,100% 8%,100% 92%,93% 100%,7% 100%,0 92%,0 8%)}
+.login-card:before{content:"";position:absolute;inset:7px;border:1px solid #00a9c455;clip-path:polygon(7% 0,93% 0,100% 8%,100% 92%,93% 100%,7% 100%,0 92%,0 8%);pointer-events:none}
+.card-top{text-align:center;margin-bottom:32px}
+.card-top h2{font-size:34px;letter-spacing:8px;margin:0 0 8px;text-shadow:0 0 16px #00dfff66}
+.card-top p{color:var(--cyan);font-size:12px;letter-spacing:3px;margin:0}
+.field{margin:18px 0}
+.field label{display:block;font-size:12px;color:#7daec4;margin-bottom:8px;letter-spacing:2px}
+.input-wrap{height:56px;border:1px solid #426b84;background:#020d19;display:flex;align-items:center;padding:0 15px;gap:12px;transition:.2s}
+.input-wrap:focus-within{border-color:var(--cyan);box-shadow:0 0 16px #00dfff33}
+.input-wrap .ico{font-size:19px;color:#b8edff;width:22px;text-align:center}
+.input-wrap input{width:100%;background:transparent;border:0;outline:0;color:white;font-size:15px;min-width:0}
+.input-wrap input::placeholder{color:#71899b}
+.icon-btn{border:0;background:none;color:#a9d8e9;font-size:18px;cursor:pointer}
+.options{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#a9c8d8;margin:18px 0 25px}
+.remember{display:flex;align-items:center;gap:8px;cursor:pointer}
+.remember input{accent-color:var(--cyan);width:16px;height:16px}
+a{color:var(--cyan);text-decoration:none}a:hover{text-shadow:0 0 10px var(--cyan)}
+.login-btn{width:100%;height:58px;border:0;border-radius:7px;background:linear-gradient(100deg,#00e5e9,#168dff);color:#00121d;font-size:20px;font-weight:900;letter-spacing:8px;cursor:pointer;box-shadow:0 0 24px #00cfff66;transition:.2s}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 0 34px #00dfffaa}
+.login-btn:active{transform:translateY(0)}
+.login-btn[disabled]{opacity:.6;cursor:not-allowed;transform:none}
+.divider{display:flex;align-items:center;gap:14px;color:#819cad;font-size:12px;margin:28px 0 18px}
+.divider:before,.divider:after{content:"";height:1px;background:#31536a;flex:1}
+.social{display:flex;justify-content:center;gap:22px}
+.social button{width:48px;height:48px;border:1px solid #315b75;border-radius:50%;background:#092238;color:#d8f7ff;font-size:18px;cursor:pointer}
+.social button:hover{border-color:var(--cyan);box-shadow:0 0 16px #00dfff55}
+.tagline{text-align:center;color:var(--cyan);letter-spacing:3px;font-size:13px;margin:24px 0 0}
+.footer{display:flex;justify-content:space-between;gap:20px;color:#52778c;font-size:11px;letter-spacing:2px;border-top:1px solid #0c3042;padding-top:14px}
+.toast{position:fixed;z-index:5;top:24px;left:50%;transform:translate(-50%,-20px);opacity:0;pointer-events:none;background:#062b36;border:1px solid var(--cyan);color:#dffcff;padding:12px 22px;box-shadow:0 0 20px #00dfff44;transition:.25s;max-width:90vw}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:#3a0b12;border-color:#ff5470;color:#ffd9df;box-shadow:0 0 20px #ff547044}
+@media(max-width:900px){
+ .main{grid-template-columns:1fr;gap:10px}.hero{min-height:auto;text-align:center;padding:30px 0 10px}.hero p{margin-left:auto;margin-right:auto}
+ .features{justify-content:center}.globe-wrap{width:min(65vw,330px);margin-top:20px}.login-card{margin:10px auto 20px}
+}
+@media(max-width:520px){
+ .page{padding:16px}.brand-mark{width:52px;height:52px;font-size:24px}.brand{gap:10px}.brand-title{font-size:25px}.brand-sub{font-size:9px;letter-spacing:1px}
+ .status{font-size:9px;padding:8px}.hero h1{font-size:32px}.login-card{padding:34px 23px 25px}.card-top h2{font-size:27px}
+ .footer{flex-direction:column;text-align:center}.globe-wrap{width:75vw}
+}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="page">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">◈</div>
+      <div>
+        <div class="brand-title">PIP <span>情报日报</span></div>
+        <div class="brand-sub">2026 · DAILY INTELLIGENCE REPORT</div>
+      </div>
+    </div>
+    <div class="status"><i></i>SYSTEM ONLINE</div>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <div class="hero-kicker">● INTELLIGENCE SYSTEM / ACCESS PORTAL</div>
+      <h1>洞察威胁态势<br><span style="color:var(--cyan)">掌握全球情报</span></h1>
+      <p>汇聚 53 个公开情报源、覆盖 25 个国家的情报网络。通过去重、时间可信度判定与地理关联，构建可追溯的情报分析工作台。</p>
+      <div class="features">
+        <span class="feature">情报收集</span><span class="feature">威胁分析</span>
+        <span class="feature">全球监控</span><span class="feature">安全可视化</span>
+      </div>
+      <div class="globe-wrap" aria-label="数字地球装饰">
+        <div class="orbit"></div><div class="orbit two"></div><div class="globe"></div>
+        <div class="globe-caption">GLOBAL THREAT INTELLIGENCE</div>
+      </div>
+    </section>
+
+    <section class="login-area">
+      <form class="login-card" id="loginForm" autocomplete="on">
+        <div class="card-top">
+          <h2>欢迎登录</h2>
+          <p>PIP INTELLIGENCE PLATFORM</p>
+        </div>
+        <div class="field">
+          <label for="username">USER ACCOUNT</label>
+          <div class="input-wrap">
+            <span class="ico">♙</span>
+            <input id="username" name="username" autocomplete="username" placeholder="请输入用户名" required>
+            <button class="icon-btn" type="button" id="clearUser" aria-label="清空账号">×</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="password">ACCESS PASSWORD</label>
+          <div class="input-wrap">
+            <span class="ico">▣</span>
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" required>
+            <button class="icon-btn" type="button" id="togglePassword" aria-label="显示或隐藏密码">◉</button>
+          </div>
+        </div>
+        <div class="options">
+          <label class="remember"><input type="checkbox" id="remember">记住账号</label>
+          <a href="#" id="forgot">忘记密码？</a>
+        </div>
+        <button class="login-btn" type="submit" id="submitBtn">⇥　登 录</button>
+        <div class="divider">或使用以下方式登录</div>
+        <div class="social">
+          <button type="button" aria-label="GitHub" data-social="GitHub">GH</button>
+          <button type="button" aria-label="微信" data-social="微信">微</button>
+          <button type="button" aria-label="其他登录" data-social="其他登录">●</button>
+        </div>
+        <div class="tagline">—— 探索数据 · 洞察未来 ——</div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© 2026 PIP INTELLIGENCE PLATFORM</span>
+    <span>SECURE ACCESS · ENCRYPTED SESSION</span>
+  </footer>
+</div>
+
+<script>
+// ---------- Matrix 数字雨 ----------
+(() => {
+  const canvas = document.getElementById('matrix');
+  const ctx = canvas.getContext('2d');
+  const chars = 'アイウエオカキクケコサシスセソタチツテト0123456789ABCDEF';
+  let columns = [], fontSize = 15, width = 0, height = 0;
+  function resize(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = window.innerWidth; height = window.innerHeight;
+    canvas.width = width * dpr; canvas.height = height * dpr;
+    canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    columns = Array.from({length: Math.ceil(width / fontSize)}, () => Math.random() * -height / fontSize);
+  }
+  function draw(){
+    ctx.fillStyle = 'rgba(1,8,16,0.09)';
+    ctx.fillRect(0, 0, width, height);
+    ctx.font = fontSize + 'px monospace';
+    columns.forEach((y, i) => {
+      const char = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillStyle = Math.random() > .97 ? '#b7ffff' : '#00a9c8';
+      ctx.fillText(char, i * fontSize, y * fontSize);
+      if(y * fontSize > height && Math.random() > .975) columns[i] = 0;
+      columns[i] += .45 + Math.random() * .4;
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize); resize(); draw();
+})();
+
+// ---------- 登录：接真实后端 ----------
+const form = document.getElementById('loginForm');
+const username = document.getElementById('username');
+const password = document.getElementById('password');
+const toast = document.getElementById('toast');
+const submitBtn = document.getElementById('submitBtn');
+let toastTimer;
+
+function showToast(message, isError){
+  toast.textContent = message;
+  toast.classList.toggle('err', !!isError);
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+document.getElementById('togglePassword').addEventListener('click', () => {
+  password.type = password.type === 'password' ? 'text' : 'password';
+});
+document.getElementById('clearUser').addEventListener('click', () => {
+  username.value = ''; username.focus();
+});
+document.getElementById('forgot').addEventListener('click', e => {
+  e.preventDefault();
+  showToast('请联系系统管理员重置密码（PIP_PASSWORD 环境变量或 data/.admin_password）');
+});
+document.querySelectorAll('[data-social]').forEach(btn => {
+  btn.addEventListener('click', () => showToast(btn.dataset.social + ' 登录尚未配置'));
+});
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  if(!form.reportValidity()) return;
+
+  const remember = document.getElementById('remember').checked;
+  if(remember) localStorage.setItem('pip_username', username.value.trim());
+  else localStorage.removeItem('pip_username');
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = '验证中…';
+  try{
+    const resp = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({username: username.value.trim(), password: password.value})
+    });
+    const data = await resp.json().catch(() => ({}));
+    if(resp.ok && data.ok){
+      showToast('验证通过，正在进入…');
+      location.href = '/';
+      return;
+    }
+    if(resp.status === 429){
+      showToast(data.message || '尝试次数过多，请稍后再试', true);
+    } else {
+      showToast(data.message || '账号或密码错误', true);
+    }
+  } catch(err){
+    showToast('无法连接服务器', true);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = '⇥　登 录';
+  }
+});
+
+// 回填记住的账号
+const savedUser = localStorage.getItem('pip_username');
+if(savedUser){
+  username.value = savedUser;
+  document.getElementById('remember').checked = true;
+  password.focus();
+} else {
+  username.focus();
+}
+</script>
+</body>
+</html>
