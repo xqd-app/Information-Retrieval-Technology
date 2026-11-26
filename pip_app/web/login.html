@@ -166,6 +166,19 @@ body{
   color:#eafcff;font-size:15px;letter-spacing:1px;outline:none;transition:.18s}
 .field input::placeholder{color:#6c93a8}
 .field input:focus{border-color:var(--cy);box-shadow:0 0 22px rgba(0,220,255,.35),inset 0 0 18px rgba(0,190,255,.12)}
+/* 浏览器自动填充会把输入框刷成浅色，覆盖回深色主题 */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus,
+.field input:-webkit-autofill:active{
+  -webkit-text-fill-color:#eafcff !important;
+  caret-color:#eafcff;
+  -webkit-box-shadow:0 0 0 1000px rgba(1,14,26,.92) inset !important;
+  box-shadow:0 0 0 1000px rgba(1,14,26,.92) inset;
+  border-color:rgba(0,200,255,.45);
+  transition:background-color 9999s ease-in-out 0s;
+}
+.field input:-moz-autofill{ filter:none; }
 
 .opts{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 24px;
   font-size:14px;color:#a9cfe0}
