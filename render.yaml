@@ -1,0 +1,22 @@
+# Render 一键部署（免费层可跑）
+# 用法：Render 控制台 → New → Blueprint → 选本仓库
+services:
+  - type: web
+    name: pip-intel
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app.py"
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.4"
+      - key: PIP_LOG_LEVEL
+        value: "INFO"
+      # 打开后每 6 小时自动采集（免费层无持久盘，重启会重新 clone 数据）
+      - key: PIP_AUTO_COLLECT
+        value: "1"
+      - key: PIP_COLLECT_INTERVAL
+        value: "21600"

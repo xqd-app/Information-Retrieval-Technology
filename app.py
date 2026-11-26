@@ -43,7 +43,13 @@ def bootstrap_db() -> None:
 
 
 def main() -> None:
-    port = os.environ.get("SERVER_PORT") or os.environ.get("PIP_PORT") or "8080"
+    # 兼容各平台的端口变量：Render/Heroku/Fly 用 PORT，Pterodactyl 用 SERVER_PORT
+    port = (
+        os.environ.get("PORT")
+        or os.environ.get("SERVER_PORT")
+        or os.environ.get("PIP_PORT")
+        or "8080"
+    )
     os.environ.setdefault("PIP_HOST", "0.0.0.0")
     os.environ["PIP_PORT"] = str(port)
     os.environ.setdefault("PIP_LOG_LEVEL", "INFO")
