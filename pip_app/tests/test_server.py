@@ -72,6 +72,16 @@ class HealthTest(ServerCase):
         self.assertGreater(payload["items"], 0)
         self.assertIn("date", payload)
 
+    def test_healthz_reports_code_provenance(self):
+        """healthz 要能回答「线上代码是不是 git 管的」。"""
+        status, _, body = self.get("/healthz")
+        self.assertEqual(status, 200)
+        payload = json.loads(body)
+        self.assertIn("code", payload)
+        self.assertIn("git", payload["code"])
+        self.assertIn("files", payload["code"])
+        self.assertIn("pip_app/web/login.html", payload["code"]["files"])
+
     def test_root_serves_html(self):
         status, headers, body = self.get("/")
         self.assertEqual(status, 200)
