@@ -1,27 +1,74 @@
 #!/usr/bin/env python3
 """容器/面板入口（Pterodactyl、Pelican 等要求 PY_FILE 指向一个 .py 文件）。
 
-面板会执行 `python app.py`，并通过环境变量注入端口（SERVER_PORT）。
-这里把它翻译成 PIP 自己的配置，然后启动生产服务。
+两种部署形态都能跑：
+    1. 面板 install script 已经把仓库 clone 到 /home/container → 直接启动
+    2. 面板没有 install script（目录里只有这个文件）→ 自己从 GitHub clone，再启动
 
-环境变量（面板里可在 Startup 页配）：
-    SERVER_PORT      面板注入的端口（优先）
-    PIP_PORT         手动指定端口（没注入时用）
-    PIP_HOST         默认 0.0.0.0（面板必须对外监听）
-    PIP_AUTO_COLLECT 1 = 后台定时采集
-    PIP_AUTO_DB      1 = 启动时建库并同步 JSONL（默认开）
+第二种情况下，你只需要上传这**一个文件**，剩下的代码由 git 拉取；
+配合面板的 AUTO_UPDATE=1，以后每次重启都会自动更新。
+
+环境变量：
+    SERVER_PORT / PORT   面板注入的端口（优先）
+    PIP_PORT             手动指定（没注入时用）
+    PIP_HOST             默认 0.0.0.0
+    PIP_REPO             覆盖仓库地址
+    PIP_AUTO_COLLECT     1 = 后台定时采集
+    PIP_AUTO_DB          1 = 启动时建库并同步 JSONL（默认开）
 """
 
 from __future__ import annotations
 
 import os
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-for extra in (ROOT, ROOT / "packetvoyage-master" / "src"):
-    if str(extra) not in sys.path:
-        sys.path.insert(0, str(extra))
+REPO = os.environ.get(
+    "PIP_REPO",
+    "https://github.com/xqd-app/Information-Retrieval-Technology.git",
+)
+BRANCH = os.environ.get("PIP_BRANCH", "main")
+
+
+def ensure_code() -> None:
+    """代码缺失时从 GitHub 拉取（幂等；已有代码则直接返回）。"""
+    if (ROOT / "pip_app" / "server.py").exists():
+        return
+
+    print(f"[bootstrap] 代码缺失，从 {REPO} 拉取 …", flush=True)
+
+    if shutil.which("git"):
+        tmp = Path(tempfile.mkdtemp(prefix="pip-clone-"))
+        try:
+            subprocess.run(
+                ["git", "clone", "--depth", "1", "--branch", BRANCH, REPO, str(tmp / "r")],
+                check=True,
+                timeout=180,
+            )
+            src = tmp / "r"
+        except Exception as exc:  # noqa: BLE001
+            print(f"[bootstrap] git clone 失败：{type(exc).__name__}: {exc}", flush=True)
+            src = None
+        if src and src.exists():
+            for item in src.iterdir():
+                if item.name == ".git":
+                    continue  # 不复制 git 元数据，交给面板的 AUTO_UPDATE 处理
+                target = ROOT / item.name
+                try:
+                    if item.is_dir():
+                        shutil.copytree(item, target, dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(item, target)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[bootstrap] 复制 {item.name} 失败：{exc}", flush=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    if not (ROOT / "pip_app" / "server.py").exists():
+        print("[bootstrap] 仍无代码，可能网络不通；请检查容器能否访问 GitHub", flush=True)
 
 
 def bootstrap_db() -> None:
@@ -36,13 +83,22 @@ def bootstrap_db() -> None:
         conn.close()
         result = ingest.sync(days=3)
         ingest.sync_health()
-        print(f"[bootstrap] db ready: +{result['inserted']} new / "
-              f"{result['updated']} updated / {result['total']} total", flush=True)
+        print(
+            f"[bootstrap] db ready: +{result['inserted']} new / "
+            f"{result['updated']} updated / {result['total']} total",
+            flush=True,
+        )
     except Exception as exc:  # noqa: BLE001
         print(f"[bootstrap] db skipped: {type(exc).__name__}: {exc}", flush=True)
 
 
 def main() -> None:
+    ensure_code()
+
+    for extra in (ROOT, ROOT / "packetvoyage-master" / "src"):
+        if str(extra) not in sys.path:
+            sys.path.insert(0, str(extra))
+
     # 兼容各平台的端口变量：Render/Heroku/Fly 用 PORT，Pterodactyl 用 SERVER_PORT
     port = (
         os.environ.get("PORT")
