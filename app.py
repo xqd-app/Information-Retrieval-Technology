@@ -55,29 +55,82 @@ def _net_check() -> bool:
         return False
 
 
-def _clone(attempt: int) -> Path | None:
-    tmp = Path(tempfile.mkdtemp(prefix="pip-clone-"))
-    dest = tmp / "r"
+# 只取运行所需的目录：仓库里还有 6 个参考项目共 48 MB，全拉下来会撑爆容器磁盘。
+# 注意 cone 模式只接受**目录**，根目录下的文件（app.py / requirements.txt）会自动包含。
+SPARSE_DIRS = ("pip_app", "pip_skeleton", "packetvoyage-master")
+BOOTSTRAP_DIR = ROOT / ".bootstrap-tmp"
+MIN_FREE_MB = 120
+
+
+def _disk_free_mb(path: Path) -> int:
+    try:
+        return shutil.disk_usage(path).free // (1024 * 1024)
+    except OSError:
+        return -1
+
+
+def _run_git(args: list[str], *, timeout: int = 300) -> tuple[bool, str]:
     env = dict(os.environ)
     env.setdefault("GIT_TERMINAL_PROMPT", "0")
     env.setdefault("GIT_HTTP_LOW_SPEED_LIMIT", "1000")
     env.setdefault("GIT_HTTP_LOW_SPEED_TIME", "30")
-    cmd = ["git", "clone", "--depth", "1", "--branch", BRANCH, REPO, str(dest)]
-    print(f"[bootstrap] clone 第 {attempt} 次：{' '.join(cmd)}", flush=True)
+    print(f"[bootstrap] $ git {' '.join(args[:7])}{' …' if len(args) > 7 else ''}", flush=True)
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=240, env=env)
+        result = subprocess.run(["git", *args], capture_output=True, text=True,
+                                timeout=timeout, env=env)
     except Exception as exc:  # noqa: BLE001
-        print(f"[bootstrap] clone 异常：{type(exc).__name__}: {exc}", flush=True)
-        return None
+        return False, f"{type(exc).__name__}: {exc}"
     if result.returncode != 0:
-        detail = (result.stderr or result.stdout or "").strip().splitlines()
-        tail = " / ".join(detail[-2:]) if detail else f"exit {result.returncode}"
-        print(f"[bootstrap] clone 失败：{tail[:400]}", flush=True)
+        lines = (result.stderr or result.stdout or "").strip().splitlines()
+        return False, (" / ".join(lines[-2:])[:400] if lines else f"exit {result.returncode}")
+    return True, ""
+
+
+def _rmtree(path: Path) -> None:
+    """删干净（Windows 上偶发文件锁，删两次）。"""
+    for _ in range(2):
+        if not path.exists():
+            return
+        shutil.rmtree(path, ignore_errors=True)
+
+
+def _clone(attempt: int) -> Path | None:
+    """clone 到工作目录，而不是 /tmp。
+
+    为什么：Pterodactyl 容器的 /tmp 常是 tmpfs（内存盘，容量很小）。
+    仓库 48 MB，正常 clone 会直接 No space left on device。
+    所以先尝试「部分克隆 + 稀疏检出」，只下运行需要的约 6 MB。
+    """
+    dest = BOOTSTRAP_DIR / f"r{attempt}"
+    _rmtree(dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+
+    free = _disk_free_mb(BOOTSTRAP_DIR)
+    print(f"[bootstrap] 可用磁盘 {free} MB @ {dest.parent}", flush=True)
+    if 0 <= free < MIN_FREE_MB:
+        print(f"[bootstrap] 磁盘不足（<{MIN_FREE_MB} MB），放弃 clone", flush=True)
         return None
-    if not dest.exists():
-        print("[bootstrap] clone 返回成功但目录不存在", flush=True)
+
+    ok, err = _run_git(["clone", "--depth", "1", "--branch", BRANCH,
+                        "--filter=blob:none", "--sparse", REPO, str(dest)])
+    if ok:
+        # cone 模式只接受目录；根目录文件会自动包含在检出里
+        ok2, err2 = _run_git(["-C", str(dest), "sparse-checkout", "set", *SPARSE_DIRS])
+        if ok2 and (dest / "pip_app" / "server.py").exists():
+            print("[bootstrap] 稀疏检出完成（仅运行所需目录）", flush=True)
+            return dest
+        print(f"[bootstrap] sparse-checkout 未成功：{err2 or '缺少 pip_app/server.py'}", flush=True)
+        _rmtree(dest)
+
+    print(f"[bootstrap] 回退普通浅克隆（上次：{err[:100]}）", flush=True)
+    fallback = BOOTSTRAP_DIR / f"r{attempt}b"
+    _rmtree(fallback)
+    ok, err = _run_git(["clone", "--depth", "1", "--branch", BRANCH, REPO, str(fallback)])
+    if not ok:
+        print(f"[bootstrap] clone 失败：{err}", flush=True)
+        _rmtree(fallback)
         return None
-    return dest
+    return fallback
 
 
 def ensure_code() -> bool:
@@ -107,6 +160,8 @@ def ensure_code() -> bool:
         return False
 
     for item in src.iterdir():
+        if item.name == ".bootstrap-tmp":
+            continue
         # 连 .git 一起复制：否则目录不是 git 仓库，
         # 面板的 `if [[ -d .git ]]; then git pull` 永远不会执行。
         try:
@@ -116,7 +171,7 @@ def ensure_code() -> bool:
                 shutil.copy2(item, ROOT / item.name)
         except Exception as exc:  # noqa: BLE001
             print(f"[bootstrap] 复制 {item.name} 失败：{exc}", flush=True)
-    shutil.rmtree(src.parent, ignore_errors=True)
+    _rmtree(BOOTSTRAP_DIR)   # 清掉临时克隆，省出 30MB
 
     ok = code_present()
     if ok:
